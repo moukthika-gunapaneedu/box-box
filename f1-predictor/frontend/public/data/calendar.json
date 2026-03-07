@@ -1,0 +1,221 @@
+{
+  "season": 2026,
+  "races": [
+    {
+      "round": 1,
+      "name": "Australian Grand Prix",
+      "circuit": "Albert Park Grand Prix Circuit",
+      "country": "Australia",
+      "locality": "Melbourne",
+      "date": "2026-03-08",
+      "race_datetime": "2026-03-08T04:00:00Z"
+    },
+    {
+      "round": 2,
+      "name": "Chinese Grand Prix",
+      "circuit": "Shanghai International Circuit",
+      "country": "China",
+      "locality": "Shanghai",
+      "date": "2026-03-15",
+      "race_datetime": "2026-03-15T07:00:00Z"
+    },
+    {
+      "round": 3,
+      "name": "Japanese Grand Prix",
+      "circuit": "Suzuka Circuit",
+      "country": "Japan",
+      "locality": "Suzuka",
+      "date": "2026-03-29",
+      "race_datetime": "2026-03-29T05:00:00Z"
+    },
+    {
+      "round": 4,
+      "name": "Bahrain Grand Prix",
+      "circuit": "Bahrain International Circuit",
+      "country": "Bahrain",
+      "locality": "Sakhir",
+      "date": "2026-04-12",
+      "race_datetime": "2026-04-12T15:00:00Z"
+    },
+    {
+      "round": 5,
+      "name": "Saudi Arabian Grand Prix",
+      "circuit": "Jeddah Corniche Circuit",
+      "country": "Saudi Arabia",
+      "locality": "Jeddah",
+      "date": "2026-04-19",
+      "race_datetime": "2026-04-19T17:00:00Z"
+    },
+    {
+      "round": 6,
+      "name": "Miami Grand Prix",
+      "circuit": "Miami International Autodrome",
+      "country": "USA",
+      "locality": "Miami",
+      "date": "2026-05-03",
+      "race_datetime": "2026-05-03T20:00:00Z"
+    },
+    {
+      "round": 7,
+      "name": "Canadian Grand Prix",
+      "circuit": "Circuit Gilles Villeneuve",
+      "country": "Canada",
+      "locality": "Montreal",
+      "date": "2026-05-24",
+      "race_datetime": "2026-05-24T20:00:00Z"
+    },
+    {
+      "round": 8,
+      "name": "Monaco Grand Prix",
+      "circuit": "Circuit de Monaco",
+      "country": "Monaco",
+      "locality": "Monte Carlo",
+      "date": "2026-06-07",
+      "race_datetime": "2026-06-07T13:00:00Z"
+    },
+    {
+      "round": 9,
+      "name": "Barcelona Grand Prix",
+      "circuit": "Circuit de Barcelona-Catalunya",
+      "country": "Spain",
+      "locality": "Barcelona",
+      "date": "2026-06-14",
+      "race_datetime": "2026-06-14T13:00:00Z"
+    },
+    {
+      "round": 10,
+      "name": "Austrian Grand Prix",
+      "circuit": "Red Bull Ring",
+      "country": "Austria",
+      "locality": "Spielberg",
+      "date": "2026-06-28",
+      "race_datetime": "2026-06-28T13:00:00Z"
+    },
+    {
+      "round": 11,
+      "name": "British Grand Prix",
+      "circuit": "Silverstone Circuit",
+      "country": "UK",
+      "locality": "Silverstone",
+      "date": "2026-07-05",
+      "race_datetime": "2026-07-05T14:00:00Z"
+    },
+    {
+      "round": 12,
+      "name": "Belgian Grand Prix",
+      "circuit": "Circuit de Spa-Francorchamps",
+      "country": "Belgium",
+      "locality": "Spa",
+      "date": "2026-07-19",
+      "race_datetime": "2026-07-19T13:00:00Z"
+    },
+    {
+      "round": 13,
+      "name": "Hungarian Grand Prix",
+      "circuit": "Hungaroring",
+      "country": "Hungary",
+      "locality": "Budapest",
+      "date": "2026-07-26",
+      "race_datetime": "2026-07-26T13:00:00Z"
+    },
+    {
+      "round": 14,
+      "name": "Dutch Grand Prix",
+      "circuit": "Circuit Park Zandvoort",
+      "country": "Netherlands",
+      "locality": "Zandvoort",
+      "date": "2026-08-23",
+      "race_datetime": "2026-08-23T13:00:00Z"
+    },
+    {
+      "round": 15,
+      "name": "Italian Grand Prix",
+      "circuit": "Autodromo Nazionale di Monza",
+      "country": "Italy",
+      "locality": "Monza",
+      "date": "2026-09-06",
+      "race_datetime": "2026-09-06T13:00:00Z"
+    },
+    {
+      "round": 16,
+      "name": "Spanish Grand Prix",
+      "circuit": "Madring",
+      "country": "Spain",
+      "locality": "Madrid",
+      "date": "2026-09-13",
+      "race_datetime": "2026-09-13T13:00:00Z"
+    },
+    {
+      "round": 17,
+      "name": "Azerbaijan Grand Prix",
+      "circuit": "Baku City Circuit",
+      "country": "Azerbaijan",
+      "locality": "Baku",
+      "date": "2026-09-26",
+      "race_datetime": "2026-09-26T11:00:00Z"
+    },
+    {
+      "round": 18,
+      "name": "Singapore Grand Prix",
+      "circuit": "Marina Bay Street Circuit",
+      "country": "Singapore",
+      "locality": "Marina Bay",
+      "date": "2026-10-11",
+      "race_datetime": "2026-10-11T12:00:00Z"
+    },
+    {
+      "round": 19,
+      "name": "United States Grand Prix",
+      "circuit": "Circuit of the Americas",
+      "country": "USA",
+      "locality": "Austin",
+      "date": "2026-10-25",
+      "race_datetime": "2026-10-25T20:00:00Z"
+    },
+    {
+      "round": 20,
+      "name": "Mexico City Grand Prix",
+      "circuit": "Aut\u00f3dromo Hermanos Rodr\u00edguez",
+      "country": "Mexico",
+      "locality": "Mexico City",
+      "date": "2026-11-01",
+      "race_datetime": "2026-11-01T20:00:00Z"
+    },
+    {
+      "round": 21,
+      "name": "Brazilian Grand Prix",
+      "circuit": "Aut\u00f3dromo Jos\u00e9 Carlos Pace",
+      "country": "Brazil",
+      "locality": "S\u00e3o Paulo",
+      "date": "2026-11-08",
+      "race_datetime": "2026-11-08T17:00:00Z"
+    },
+    {
+      "round": 22,
+      "name": "Las Vegas Grand Prix",
+      "circuit": "Las Vegas Strip Street Circuit",
+      "country": "USA",
+      "locality": "Las Vegas",
+      "date": "2026-11-22",
+      "race_datetime": "2026-11-22T04:00:00Z"
+    },
+    {
+      "round": 23,
+      "name": "Qatar Grand Prix",
+      "circuit": "Losail International Circuit",
+      "country": "Qatar",
+      "locality": "Lusail",
+      "date": "2026-11-29",
+      "race_datetime": "2026-11-29T16:00:00Z"
+    },
+    {
+      "round": 24,
+      "name": "Abu Dhabi Grand Prix",
+      "circuit": "Yas Marina Circuit",
+      "country": "UAE",
+      "locality": "Abu Dhabi",
+      "date": "2026-12-06",
+      "race_datetime": "2026-12-06T13:00:00Z"
+    }
+  ]
+}

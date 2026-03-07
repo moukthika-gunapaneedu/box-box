@@ -1,0 +1,8 @@
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+backend/__pycache__/
+backend/data/cache/
+*.pyc
+*.pkl
+.DS_Store

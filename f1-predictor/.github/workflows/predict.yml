@@ -1,0 +1,77 @@
+name: F1 Prediction Pipeline
+
+on:
+  # After qualifying: Saturday ~17:30 UTC (covers most time zones)
+  schedule:
+    - cron: "30 17 * * 6"   # Saturday 17:30 UTC — post-qualifying
+    - cron: "0  10 * * 0"   # Sunday  10:00 UTC — race morning refresh
+    - cron: "0  17 * * 0"   # Sunday  17:00 UTC — post-race result update
+
+  # Manual trigger with optional round number
+  workflow_dispatch:
+    inputs:
+      round_number:
+        description: "Race round number (leave blank for auto-detect)"
+        required: false
+        default: ""
+      mode:
+        description: "Mode: predict | update_history | train"
+        required: false
+        default: "predict"
+
+jobs:
+  run-pipeline:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Install dependencies
+        run: |
+          cd backend
+          pip install -r requirements.txt
+
+      - name: Run prediction pipeline
+        env:
+          PYTHONPATH: backend/scripts
+        run: |
+          cd backend/scripts
+          MODE="${{ github.event.inputs.mode || 'predict' }}"
+          ROUND="${{ github.event.inputs.round_number }}"
+
+          if [ "$MODE" = "train" ]; then
+            echo "Training models..."
+            python train_model.py
+          elif [ "$MODE" = "update_history" ] && [ -n "$ROUND" ]; then
+            echo "Updating history for round $ROUND..."
+            python update_history.py $ROUND
+          else
+            echo "Generating predictions..."
+            if [ -n "$ROUND" ]; then
+              python predict_race.py $ROUND
+            else
+              python predict_race.py
+            fi
+          fi
+
+      - name: Commit updated prediction data
+        run: |
+          git config user.name "F1 Predictor Bot"
+          git config user.email "bot@f1predictor.io"
+          git add frontend/public/data/predictions.json frontend/public/data/history.json
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "chore: update race predictions [skip ci]"
+            git push
+          fi

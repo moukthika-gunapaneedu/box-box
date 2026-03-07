@@ -1,0 +1,37 @@
+name: Deploy to GitHub Pages
+                                                                                                                                                                                                  
+  on:             
+    push:
+      branches: [main]
+    workflow_dispatch:
+
+  jobs:
+    build-deploy:
+      runs-on: ubuntu-latest
+      permissions:
+        contents: read
+        pages: write
+        id-token: write
+      environment:
+        name: github-pages
+        url: ${{ steps.deployment.outputs.page_url }}
+      steps:
+        - uses: actions/checkout@v4
+
+        - name: Setup Node
+          uses: actions/setup-node@v4
+          with:
+            node-version: 20
+
+        - name: Install and build
+          run: |
+            cd f1-predictor/frontend
+            npm install
+            npm run build
+
+        - uses: actions/upload-pages-artifact@v3
+          with:
+            path: f1-predictor/frontend/out
+
+        - uses: actions/deploy-pages@v4
+          id: deployment
