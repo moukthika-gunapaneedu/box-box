@@ -1,0 +1,8 @@
+f1-predictor/frontend/node_modules/
+f1-predictor/frontend/.next/
+f1-predictor/frontend/out/
+f1-predictor/backend/__pycache__/
+f1-predictor/backend/data/cache/
+*.pyc
+*.pkl
+.DS_Store

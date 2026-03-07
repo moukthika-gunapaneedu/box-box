@@ -1,0 +1,6 @@
+{               
+    "name": "box-box",
+    "scripts": {
+      "build": "cd f1-predictor/frontend && npm install && npm run build"
+    }
+  }
