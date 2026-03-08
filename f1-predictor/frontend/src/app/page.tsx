@@ -127,7 +127,7 @@ export default async function Home() {
                 {
                   icon: Cpu,
                   title: "ML Ensemble",
-                  desc: "XGBoost + LightGBM trained on 2022–2026 races with 2026 regulation weighting.",
+                  desc: "XGBoost + LightGBM trained on 2023–2025 races. Models retrained as 2026 results come in.",
                 },
                 {
                   icon: BarChart3,
