@@ -96,11 +96,15 @@ def _build_race_features(
         ((all_results["season"] == year) & (all_results["round"] < round_num))
     ]
 
-    # FP2 pace (skip if unavailable to keep training fast)
-    try:
-        fp_pace = get_fp_pace(year, round_num, "Practice 2")
-    except Exception:
-        fp_pace = pd.DataFrame()
+    # FP pace: try FP3 first (closer to race setup), fall back to FP2
+    fp_pace = pd.DataFrame()
+    for session in ("Practice 3", "Practice 2"):
+        try:
+            fp_pace = get_fp_pace(year, round_num, session)
+            if not fp_pace.empty:
+                break
+        except Exception:
+            pass
 
     # Driver + constructor standings: use previous round to avoid leakage.
     # For round 1, use end of prior season standings.
@@ -210,20 +214,40 @@ def _driver_features(
         total_starts = len(driver_past)
         feats["career_win_rate"] = float((driver_past["position"] == 1).sum() / total_starts)
         feats["career_podium_rate"] = float((driver_past["position"] <= 3).sum() / total_starts)
+
+        # Recent season form: avg position in most recent complete season only.
+        # Better reflects current car performance than multi-year career stats.
+        max_season = int(driver_past["season"].max())
+        recent_season = driver_past[driver_past["season"] == max_season]
+        feats["recent_season_avg_pos"] = float(recent_season["position"].mean()) if not recent_season.empty else feats["recent_form_5"]
     else:
         feats["recent_form_5"] = 10.0
         feats["dnf_rate_10"] = 0.1
         feats["positions_gained_avg"] = 0.0
         feats["career_win_rate"] = 0.0
         feats["career_podium_rate"] = 0.0
+        feats["recent_season_avg_pos"] = 10.0
 
-    # ---- Circuit historical average ----
+    # ---- Circuit historical average + safety car proxy ----
     circuit = race_meta.get("circuit", "")
     circuit_past = driver_past[driver_past.get("circuit", pd.Series(dtype=str)) == circuit] if "circuit" in driver_past.columns else pd.DataFrame()
     if not circuit_past.empty:
         feats["circuit_hist_avg"] = float(circuit_past["position"].mean())
     else:
         feats["circuit_hist_avg"] = feats["recent_form_5"]  # fallback
+
+    # Safety car probability proxy: at chaotic circuits, grid position predicts
+    # finish position less well. Measure as mean abs(grid - finish) across all
+    # drivers in historical races at this circuit. Higher = more chaos / SC likely.
+    if not past_results.empty and "circuit" in past_results.columns and "grid" in past_results.columns:
+        circuit_all = past_results[past_results["circuit"] == circuit]
+        if not circuit_all.empty:
+            valid = circuit_all[(circuit_all["grid"] > 0) & (circuit_all["position"] > 0)]
+            feats["circuit_chaos_rate"] = float((valid["grid"] - valid["position"]).abs().mean()) if not valid.empty else 3.0
+        else:
+            feats["circuit_chaos_rate"] = 3.0
+    else:
+        feats["circuit_chaos_rate"] = 3.0
 
     # ---- Constructor reliability (this season) ----
     constructor_id = None
@@ -241,13 +265,37 @@ def _driver_features(
         else:
             feats["team_reliability_score"] = 0.9
 
-        # Team race pace rank: average finishing position of the constructor
-        # across recent races (lower = faster car, independent of qualifying)
-        team_recent = past_results[past_results["constructorId"] == constructor_id].tail(20)
-        feats["team_race_pace_rank"] = float(team_recent["position"].mean()) if not team_recent.empty else 10.0
+        # Team race pace rank: exponentially weighted recent races (more weight to recent)
+        team_recent = past_results[past_results["constructorId"] == constructor_id].tail(20).copy()
+        if not team_recent.empty:
+            weights = np.exp(np.linspace(0, 1, len(team_recent)))
+            feats["team_race_pace_rank"] = float(np.average(team_recent["position"], weights=weights))
+        else:
+            feats["team_race_pace_rank"] = 10.0
+
+        # Teammate head-to-head: driver's avg finish vs teammate's avg finish
+        # over their last 10 shared races. Negative = beats teammate (better).
+        teammates = past_results[
+            (past_results["constructorId"] == constructor_id) &
+            (past_results["driverCode"] != driver_code)
+        ]["driverCode"].unique()
+        if len(teammates) > 0:
+            shared = past_results[
+                past_results["constructorId"] == constructor_id
+            ].sort_values(["season", "round"]).tail(30)
+            driver_shared = shared[shared["driverCode"] == driver_code]["position"].values
+            teammate_shared = shared[shared["driverCode"].isin(teammates)].groupby(["season", "round"])["position"].min().values
+            min_len = min(len(driver_shared), len(teammate_shared), 10)
+            if min_len > 0:
+                feats["teammate_finish_gap"] = float(np.mean(driver_shared[-min_len:]) - np.mean(teammate_shared[-min_len:]))
+            else:
+                feats["teammate_finish_gap"] = 0.0
+        else:
+            feats["teammate_finish_gap"] = 0.0
     else:
         feats["team_reliability_score"] = 0.9
         feats["team_race_pace_rank"] = 10.0
+        feats["teammate_finish_gap"] = 0.0
 
     # ---- FP2 pace delta ----
     if not fp_pace_df.empty and driver_code in fp_pace_df["driverCode"].values:
@@ -341,10 +389,14 @@ def build_inference_features(
     except Exception:
         quali = pd.DataFrame()
 
-    try:
-        fp_pace = get_fp_pace(year, round_num, "Practice 2")
-    except Exception:
-        fp_pace = pd.DataFrame()
+    fp_pace = pd.DataFrame()
+    for session in ("Practice 3", "Practice 2"):
+        try:
+            fp_pace = get_fp_pace(year, round_num, session)
+            if not fp_pace.empty:
+                break
+        except Exception:
+            pass
 
     try:
         if round_num == 1:
@@ -393,4 +445,7 @@ FEATURE_COLS = [
     "career_win_rate",
     "career_podium_rate",
     "constructor_champ_pos_norm",
+    "recent_season_avg_pos",
+    # circuit_chaos_rate: tested, contributes 0% — removed
+    # teammate_finish_gap: tested, +win but -podium, net zero — removed
 ]
