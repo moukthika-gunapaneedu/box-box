@@ -157,6 +157,9 @@ def predict(round_num: int | None = None) -> dict:
     pod_probs = np.array(pod_probs, dtype=float)
     pod_probs = np.clip(pod_probs, 0, 1)
 
+    # Enforce logical constraint: podium % >= win % (a win is a subset of a podium)
+    pod_probs = np.maximum(pod_probs, win_probs)
+
     # Build sorted predictions list
     results = []
     for i, code in enumerate(drivers):
@@ -165,7 +168,7 @@ def predict(round_num: int | None = None) -> dict:
         win_p = float(win_probs[i])
         pod_p = float(pod_probs[i])
         pos_p = float(pos_preds[i])
-        confidence = _confidence(win_p, features_df.iloc[i])
+        confidence = _confidence(win_p, pod_p, features_df.iloc[i])
 
         results.append({
             "driver_code": code,
@@ -184,6 +187,15 @@ def predict(round_num: int | None = None) -> dict:
     results.sort(key=lambda x: x["win_probability"], reverse=True)
     for i, r in enumerate(results):
         r["position"] = i + 1
+
+    # Fix predicted_finish: assign unique integer ranks based on xgb_pos output.
+    # Ties broken by win_probability (descending) to stay consistent with position ordering.
+    results_by_pos = sorted(results, key=lambda x: (x["predicted_finish"], -x["win_probability"]))
+    for rank, r in enumerate(results_by_pos, 1):
+        r["predicted_finish"] = float(rank)
+
+    # Restore win_probability sort order for final output
+    results.sort(key=lambda x: x["win_probability"], reverse=True)
 
     # Season accuracy from history
     history = _load_history()
@@ -239,11 +251,11 @@ def _heuristic_predictions(df: pd.DataFrame) -> tuple:
     return win_probs, pod_probs, pos_preds
 
 
-def _confidence(win_prob: float, row: pd.Series) -> str:
+def _confidence(win_prob: float, pod_prob: float, row: pd.Series) -> str:
     quali_pos = row.get("quali_position", 10)
     if win_prob > 0.25 and quali_pos <= 3:
         return "high"
-    if win_prob > 0.10 or quali_pos <= 6:
+    if win_prob > 0.10 or pod_prob > 0.50 or quali_pos <= 6:
         return "medium"
     return "low"
 
