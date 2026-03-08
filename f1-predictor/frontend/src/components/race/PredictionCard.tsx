@@ -31,7 +31,7 @@ export default function PredictionCard({ prediction: p, rank, delay = 0 }: Predi
 
   return (
     <div
-      className="relative glass-card overflow-hidden transition-all duration-300 hover:border-opacity-50 group"
+      className="relative glass-card transition-all duration-300 hover:border-opacity-50 group"
       style={{
         borderLeftColor: rankStyle?.border ?? p.team_color,
         borderLeftWidth: 3,

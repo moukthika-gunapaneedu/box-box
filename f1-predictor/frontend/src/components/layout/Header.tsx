@@ -16,9 +16,12 @@ const NAV_LINKS = [
 export default function Header() {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [isRaceDay, setIsRaceDay] = useState(false);
-  const [isLive, setIsLive] = useState(false);
-  const [nextRaceName, setNextRaceName] = useState("Next Race");
+  // null = still loading, don't render status badge yet
+  const [status, setStatus] = useState<{
+    isRaceDay: boolean;
+    isLive: boolean;
+    raceName: string;
+  } | null>(null);
 
   useEffect(() => {
     fetch("/data/predictions.json")
@@ -26,16 +29,13 @@ export default function Header() {
       .then((data: any) => {
         const raceDate = new Date(data.race_date);
         const now = new Date();
-        // Same calendar day in UTC = race day
-        const todayUTC = now.toISOString().slice(0, 10);
-        const raceDayUTC = raceDate.toISOString().slice(0, 10);
-        const raceDay = todayUTC === raceDayUTC;
-        // Live = race started and within 3 hours
+        // Compare LOCAL calendar dates so race day works in any timezone
+        const fmt = (d: Date) => new Intl.DateTimeFormat("en-CA").format(d);
         const diffSec = (now.getTime() - raceDate.getTime()) / 1000;
-        const live = diffSec > 0 && diffSec < 3 * 3600;
-        setIsRaceDay(raceDay);
-        setIsLive(live);
-        setNextRaceName(data.race);
+        const isLive = diffSec > 0 && diffSec < 3 * 3600;
+        // Race day = same local calendar date OR within 24h before start
+        const isRaceDay = fmt(now) === fmt(raceDate) || isLive;
+        setStatus({ isRaceDay, isLive, raceName: data.race });
       })
       .catch(() => {});
   }, []);
@@ -75,22 +75,26 @@ export default function Header() {
             ))}
           </nav>
 
-          {/* Status pill */}
-          <div className="hidden md:flex items-center">
-            {isRaceDay ? (
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-sm border border-f1-red/30 bg-f1-red/10">
-                <span className={cn("live-dot", !isLive && "opacity-50")} />
-                <span className="font-barlow font-700 text-f1-red text-xs tracking-widest uppercase">
-                  {isLive ? "Race Live" : "Race Day"}
-                </span>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-sm border border-border">
-                <span className="font-inter text-xs text-muted">
-                  Next:{" "}
-                  <span className="text-platinum font-500">{nextRaceName}</span>
-                </span>
-              </div>
+          {/* Status pill — only render after fetch resolves */}
+          <div className="hidden md:flex items-center min-w-[120px] justify-end">
+            {status && (
+              status.isRaceDay ? (
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-sm border border-f1-red/30 bg-f1-red/10">
+                  <span className={cn("live-dot", !status.isLive && "opacity-50")} />
+                  <span className="font-barlow font-700 text-f1-red text-xs tracking-widest uppercase">
+                    {status.isLive ? "Race Live" : "Race Day"}
+                  </span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-sm border border-border">
+                  <span className="font-inter text-xs text-muted">
+                    Next:{" "}
+                    <span className="text-platinum font-500">
+                      {status.raceName.replace(" Grand Prix", "")}
+                    </span>
+                  </span>
+                </div>
+              )
             )}
           </div>
 
@@ -124,11 +128,11 @@ export default function Header() {
                 {link.label}
               </Link>
             ))}
-            {isRaceDay && (
+            {status?.isRaceDay && (
               <div className="mx-4 mt-2 mb-1 flex items-center gap-2 px-3 py-2 rounded-sm border border-f1-red/30 bg-f1-red/10">
-                <span className={cn("live-dot", !isLive && "opacity-50")} />
+                <span className={cn("live-dot", !status.isLive && "opacity-50")} />
                 <span className="font-barlow font-700 text-f1-red text-xs tracking-widest uppercase">
-                  {isLive ? "Race Live" : "Race Day"}
+                  {status.isLive ? "Race Live" : "Race Day"}
                 </span>
               </div>
             )}
