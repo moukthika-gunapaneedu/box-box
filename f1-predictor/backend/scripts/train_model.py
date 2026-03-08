@@ -100,8 +100,10 @@ def train() -> dict:
     xgb_pos_model = xgb.XGBRegressor(**xgb_pos_params)
 
     # ---- Cross-validation metrics ----
-    win_preds_cv, podium_preds_cv = [], []
-    win_true_cv, podium_true_cv = [], []
+    # Track (val_idx, win_prob, pod_prob) so we can align predictions to the
+    # correct rows in df_sorted — previously predictions were matched to the
+    # wrong rows causing 0% winner accuracy.
+    cv_records: list[tuple[int, float, float]] = []
 
     for fold, (train_idx, val_idx) in enumerate(tscv.split(X_s)):
         Xtr, Xval = X_s.iloc[train_idx], X_s.iloc[val_idx]
@@ -111,17 +113,18 @@ def train() -> dict:
 
         m_win = xgb.XGBClassifier(**xgb_win_params)
         m_win.fit(Xtr, ytr_w, sample_weight=wtr, verbose=False)
-        win_preds_cv.extend(m_win.predict_proba(Xval)[:, 1].tolist())
-        win_true_cv.extend(yval_w.tolist())
+        win_probs_fold = m_win.predict_proba(Xval)[:, 1].tolist()
 
         m_pod = lgb.LGBMClassifier(**lgb_podium_params)
         m_pod.fit(Xtr, ytr_p, sample_weight=wtr)
-        podium_preds_cv.extend(m_pod.predict_proba(Xval)[:, 1].tolist())
-        podium_true_cv.extend(yval_p.tolist())
+        pod_probs_fold = m_pod.predict_proba(Xval)[:, 1].tolist()
+
+        for row_idx, wp, pp in zip(val_idx, win_probs_fold, pod_probs_fold):
+            cv_records.append((row_idx, wp, pp))
         print(f"  Fold {fold+1} done")
 
     # Winner accuracy: predicted winner = driver with max win_prob per race
-    metrics = _compute_cv_metrics(win_preds_cv, win_true_cv, podium_preds_cv, podium_true_cv, df_sorted)
+    metrics = _compute_cv_metrics(cv_records, df_sorted)
     print(f"\nCV Metrics: {json.dumps(metrics, indent=2)}")
 
     # ---- Final training on all data ----
@@ -142,17 +145,23 @@ def train() -> dict:
 
 
 def _compute_cv_metrics(
-    win_probs: list, win_true: list,
-    pod_probs: list, pod_true: list,
+    cv_records: list[tuple[int, float, float]],
     df_sorted: pd.DataFrame,
 ) -> dict:
-    """Compute winner accuracy and podium accuracy from CV fold predictions."""
-    # Rebuild per-race predictions
+    """Compute winner accuracy and podium accuracy from CV fold predictions.
+
+    cv_records: list of (row_idx_in_df_sorted, win_prob, pod_prob) — one per
+    driver per race, using the actual validation row index so predictions are
+    aligned to the correct races.
+    """
     df_cv = df_sorted.copy().reset_index(drop=True)
-    n = len(win_probs)
-    df_cv = df_cv.iloc[:n].copy()
-    df_cv["win_prob_pred"] = win_probs
-    df_cv["podium_prob_pred"] = pod_probs
+    df_cv["win_prob_pred"] = np.nan
+    df_cv["podium_prob_pred"] = np.nan
+    for row_idx, wp, pp in cv_records:
+        df_cv.at[row_idx, "win_prob_pred"] = wp
+        df_cv.at[row_idx, "podium_prob_pred"] = pp
+    # Only evaluate races where we have predictions
+    df_cv = df_cv.dropna(subset=["win_prob_pred"])
 
     correct_wins = 0
     correct_podiums = 0

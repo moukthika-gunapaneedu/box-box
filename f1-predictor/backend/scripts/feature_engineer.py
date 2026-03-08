@@ -171,8 +171,8 @@ def _driver_features(
         feats["dnf_rate_10"] = float(dnf_mask.mean())
 
         # Average positions gained from grid to finish (positive = charges forward)
-        if "grid_position" in last5.columns:
-            gains = last5["grid_position"] - last5["position"]
+        if "grid" in last5.columns:
+            gains = last5["grid"] - last5["position"]
             feats["positions_gained_avg"] = float(gains.mean())
         else:
             feats["positions_gained_avg"] = 0.0
