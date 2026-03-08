@@ -13,6 +13,7 @@ from collect_data import (
     get_race_results,
     get_qualifying_results,
     get_constructor_standings,
+    get_driver_standings,
     get_fp_pace,
 )
 from utils import season_weight, DRIVERS_2026, OVERTAKE_INDEX, get_circuit_type
@@ -101,6 +102,16 @@ def _build_race_features(
     except Exception:
         fp_pace = pd.DataFrame()
 
+    # Driver standings: use previous round to avoid leakage.
+    # For round 1, use end of prior season standings.
+    try:
+        if round_num == 1:
+            standings = get_driver_standings(year - 1)
+        else:
+            standings = get_driver_standings(year, round_num - 1)
+    except Exception:
+        standings = pd.DataFrame()
+
     rows = []
     for _, race_row in race_results.iterrows():
         code = race_row["driverCode"]
@@ -112,6 +123,7 @@ def _build_race_features(
             past_results=past_results,
             quali_df=quali,
             fp_pace_df=fp_pace,
+            standings_df=standings,
         )
         feats["season"] = year
         feats["round"] = round_num
@@ -135,6 +147,7 @@ def _driver_features(
     past_results: pd.DataFrame,
     quali_df: pd.DataFrame,
     fp_pace_df: pd.DataFrame,
+    standings_df: pd.DataFrame = pd.DataFrame(),
 ) -> dict:
     """Compute all features for a single driver in a single race."""
     feats: dict = {"driverCode": driver_code}
@@ -230,6 +243,24 @@ def _driver_features(
     driver_info = DRIVERS_2026.get(driver_code, {})
     feats["is_new_team"] = int(driver_info.get("team", "") == "Cadillac")
 
+    # ---- Championship standing ----
+    # Uses standings from prior round (or prior season for round 1) to avoid
+    # leakage. Normalised to [0, 1] by dividing by field size so it's
+    # comparable across different grid sizes.
+    if not standings_df.empty and "driverCode" in standings_df.columns:
+        drow = standings_df[standings_df["driverCode"] == driver_code]
+        field_size = max(len(standings_df), 1)
+        if not drow.empty:
+            feats["champ_position_norm"] = float(drow.iloc[0]["position"]) / field_size
+            feats["champ_points"] = float(drow.iloc[0]["points"])
+        else:
+            # Driver not in standings yet (new to grid) — treat as last place
+            feats["champ_position_norm"] = 1.0
+            feats["champ_points"] = 0.0
+    else:
+        feats["champ_position_norm"] = 0.5  # neutral default
+        feats["champ_points"] = 0.0
+
     # ---- Season weight (applied as sample_weight, not a model feature) ----
     # (stored separately in build_race_features)
 
@@ -285,6 +316,14 @@ def build_inference_features(
     except Exception:
         fp_pace = pd.DataFrame()
 
+    try:
+        if round_num == 1:
+            standings = get_driver_standings(year - 1)
+        else:
+            standings = get_driver_standings(year, round_num - 1)
+    except Exception:
+        standings = pd.DataFrame()
+
     rows = []
     for code in drivers:
         feats = _driver_features(
@@ -295,6 +334,7 @@ def build_inference_features(
             past_results=all_past_results,
             quali_df=quali,
             fp_pace_df=fp_pace,
+            standings_df=standings,
         )
         feats["season"] = year
         feats["round"] = round_num
@@ -315,4 +355,6 @@ FEATURE_COLS = [
     "is_new_team",
     "positions_gained_avg",
     "team_race_pace_rank",
+    "champ_position_norm",
+    "champ_points",
 ]
