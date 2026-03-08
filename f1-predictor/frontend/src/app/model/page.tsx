@@ -1,48 +1,137 @@
-import { Database, Cpu, FlaskConical, AlertTriangle, TrendingUp, Zap } from "lucide-react";
+import { Database, Cpu, FlaskConical, AlertTriangle, TrendingUp, Zap, XCircle } from "lucide-react";
 
 export const metadata = {
-  title: "How It Works | F1 Predictor",
-  description: "The ML model behind F1 race winner predictions — data sources, features, and architecture.",
+  title: "How It Works | Box Box",
+  description: "The ML model behind F1 race winner predictions — data sources, features, architecture, and known limitations.",
 };
 
 const DATA_SOURCES = [
   {
-    name: "OpenF1 API",
-    url: "openf1.org",
-    desc: "Real-time session data: lap times, sector times, pit stops, weather, car telemetry. Primary source for 2026 season.",
-    tag: "Real-time",
-  },
-  {
     name: "Jolpica / Ergast",
     url: "api.jolpi.ca",
-    desc: "Historical race results, qualifying, and standings from 2022–2025. Used to build driver and circuit profiles.",
+    desc: "Historical race results, qualifying positions, driver standings, and constructor standings from 2023–2025. Core training data source.",
     tag: "Historical",
   },
   {
-    name: "OpenMeteo",
-    url: "open-meteo.com",
-    desc: "Race weekend weather forecasts: temperature, rainfall, wind. Used as a feature for wet/dry performance delta.",
-    tag: "Weather",
+    name: "OpenF1 API",
+    url: "openf1.org",
+    desc: "Real-time session data for the current season: practice lap times, qualifying results, race weather (temperature, rainfall). Primary source for 2026 data.",
+    tag: "Real-time",
   },
 ];
 
 const FEATURES = [
-  { name: "Qualifying Position", weight: "High", desc: "Strongest single predictor. Grid position determines overtaking opportunity." },
-  { name: "Qualifying Gap to Pole %", weight: "High", desc: "Pace delta as % of pole time. Better than raw time difference across circuits." },
-  { name: "Recent Form (5-race avg)", weight: "Medium", desc: "Rolling average finishing position over last 5 races. Captures momentum." },
-  { name: "FP Pace Delta", weight: "Medium", desc: "Practice session best lap vs session fastest. Proxy for race pace." },
-  { name: "Circuit Historical Avg", weight: "Medium", desc: "Driver's average finish at this specific circuit. Circuit-driver affinity." },
-  { name: "Team Reliability Score", weight: "Low-Med", desc: "Constructor DNF rate this season. High reliability = consistent finishing." },
-  { name: "Driver DNF Rate", weight: "Low", desc: "Rolling 10-race DNF rate. Penalizes error-prone drivers." },
-  { name: "Overtake Difficulty", weight: "Low", desc: "Circuit type index: street = hard to overtake, high-speed = easier." },
+  {
+    name: "Qualifying Position",
+    weight: "High",
+    desc: "Actual grid position from qualifying. If a driver crashed or was excluded, they're assigned last place.",
+  },
+  {
+    name: "Qualifying Gap to Pole %",
+    weight: "High",
+    desc: "Driver's best qualifying time as a % behind pole. More meaningful than raw lap time across different circuits.",
+  },
+  {
+    name: "Recent Form (5-race avg)",
+    weight: "Medium",
+    desc: "Average finishing position over the last 5 races. Captures current momentum regardless of which team they're on.",
+  },
+  {
+    name: "Team Race Pace Rank",
+    weight: "Medium",
+    desc: "Constructor's average finishing position over recent races, exponentially weighted so the latest races count more.",
+  },
+  {
+    name: "Practice Pace Delta",
+    weight: "Medium",
+    desc: "Driver's best FP3 (or FP2) lap vs the session fastest, as a percentage. Proxy for race weekend setup and raw pace.",
+  },
+  {
+    name: "Circuit Historical Average",
+    weight: "Medium",
+    desc: "Driver's average finishing position at this specific circuit across all training seasons.",
+  },
+  {
+    name: "Positions Gained Average",
+    weight: "Medium",
+    desc: "Average positions gained from grid to finish over recent races. Captures race-craft vs pure qualifying pace.",
+  },
+  {
+    name: "Championship Standing",
+    weight: "Medium",
+    desc: "Driver's normalised championship position and points from the prior round. Reflects current-season competitive order.",
+  },
+  {
+    name: "Career Win & Podium Rate",
+    weight: "Medium",
+    desc: "All-time win rate and podium rate from training data. Helps correctly rank drivers who recently changed teams (e.g., Hamilton to Ferrari).",
+  },
+  {
+    name: "Constructor Championship Pos.",
+    weight: "Low–Med",
+    desc: "Team's normalised constructor standing. Independent signal for overall car performance.",
+  },
+  {
+    name: "Recent Season Avg Position",
+    weight: "Low–Med",
+    desc: "Driver's average finish in their most recent complete season. Reflects current car, not career average.",
+  },
+  {
+    name: "Race Weather",
+    weight: "Contextual",
+    desc: "Is it raining (0/1) and track temperature at race start, from OpenF1. Changes tyre behaviour and overtaking rates significantly.",
+  },
+  {
+    name: "Team Reliability Score",
+    weight: "Low",
+    desc: "Constructor's DNF rate this season. Penalises teams with recent mechanical failures.",
+  },
+  {
+    name: "Driver DNF Rate",
+    weight: "Low",
+    desc: "Driver's DNF rate over last 10 races. Penalises error-prone or crash-prone drivers.",
+  },
+  {
+    name: "Overtake Difficulty Index",
+    weight: "Low",
+    desc: "Circuit-type index: street circuits score high (hard to overtake), high-speed circuits score low.",
+  },
 ];
 
 const WEIGHT_COLORS: Record<string, string> = {
   High: "#E10600",
-  "Medium": "#FF8000",
-  "Low-Med": "#FFD700",
-  "Low": "#888888",
+  Medium: "#FF8000",
+  "Low–Med": "#FFD700",
+  Contextual: "#00D2FF",
+  Low: "#888888",
 };
+
+const LIMITATIONS = [
+  {
+    title: "Only 3 seasons of training data",
+    desc: "The model trains on 2023, 2024, and 2025 only. 2022 was dropped because it was the first year of ground-effect regulations and taught incorrect patterns. Three seasons (~70 races, ~1,400 driver-race rows) is a small dataset for ML.",
+  },
+  {
+    title: "2026 is an entirely new formula",
+    desc: "New aerodynamic and power unit regulations mean 2026 cars behave differently from anything in training. Pre-2026 data is useful but not a perfect proxy. Predictions carry higher uncertainty until the 2026 competitive order becomes clear.",
+  },
+  {
+    title: "New driver and team combinations",
+    desc: "Hamilton moved to Ferrari, Antonelli replaced him at Mercedes, Cadillac is brand new. The model relies on career stats and constructor standings when team-specific history is thin — some drivers are inherently more uncertain than others.",
+  },
+  {
+    title: "Mechanical failures and incidents are unpredictable",
+    desc: "The model cannot predict Q1 crashes, rear-axle failures, or race-day retirements. Verstappen starting P20 in Australia after a Q1 crash is a perfect example — no historical feature could foresee that outcome.",
+  },
+  {
+    title: "No tyre strategy or race-day tactics",
+    desc: "Compound choice at the start, undercut windows, safety car timing, and pit strategy calls are major race outcome drivers that aren't available pre-race and aren't modelled.",
+  },
+  {
+    title: "Qualifying fallback for missing data",
+    desc: "If qualifying data isn't available from the API yet (pre-qualifying weekend), the model uses a driver's historical average grid position. This is less accurate than actual qualifying results and can significantly skew predictions.",
+  },
+];
 
 export default function ModelPage() {
   return (
@@ -54,8 +143,8 @@ export default function ModelPage() {
           How It Works
         </h1>
         <p className="font-inter text-sm text-muted leading-relaxed max-w-2xl">
-          F1 Predictor uses a machine learning ensemble trained on race data from 2022 to present.
-          Predictions update automatically after qualifying and on race morning via GitHub Actions.
+          Box Box uses a machine learning ensemble trained on F1 race data from 2023 to present.
+          Predictions are regenerated after qualifying each Saturday using the actual grid positions.
         </p>
       </div>
 
@@ -64,13 +153,12 @@ export default function ModelPage() {
         <AlertTriangle size={16} className="text-amber-400 shrink-0 mt-0.5" />
         <div>
           <p className="font-barlow font-700 text-sm text-amber-400 uppercase tracking-wide mb-1">
-            2026 Regulation Note
+            2026 Season — Early Stage
           </p>
           <p className="font-inter text-xs text-muted leading-relaxed">
-            2026 introduces entirely new aerodynamic and power unit regulations — essentially a new formula.
-            Pre-2026 data is down-weighted (5× weighting on 2026 races vs 1× for 2025).
-            Early-season predictions carry more uncertainty until the competitive order becomes clear.
-            Cadillac F1 has no historical race data and is modelled using driver backgrounds + practice pace only.
+            2026 introduces new aerodynamic and power unit regulations — essentially a new formula.
+            The model has no 2026 race results to learn from yet. Early-season predictions are based entirely on
+            2023–2025 patterns projected onto a new grid. Accuracy will improve as 2026 race data accumulates.
           </p>
         </div>
       </div>
@@ -83,7 +171,7 @@ export default function ModelPage() {
           </div>
           <h2 className="font-barlow font-800 text-xl uppercase tracking-wide text-platinum">Data Sources</h2>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {DATA_SOURCES.map((src) => (
             <div key={src.name} className="glass-card p-4">
               <div className="flex items-start justify-between mb-2">
@@ -97,6 +185,9 @@ export default function ModelPage() {
             </div>
           ))}
         </div>
+        <p className="font-inter text-xs text-muted mt-3 pl-1">
+          All API responses are cached locally. Qualifying data refreshes every 48 hours; race results are cached permanently. Calendar and standings refresh every 6 hours.
+        </p>
       </section>
 
       {/* Features */}
@@ -107,12 +198,17 @@ export default function ModelPage() {
           </div>
           <h2 className="font-barlow font-800 text-xl uppercase tracking-wide text-platinum">Feature Engineering</h2>
         </div>
+        <p className="font-inter text-xs text-muted mb-4 leading-relaxed">
+          Each row in the training dataset represents one driver in one race. 15 features are computed per driver.
+          Features with no historical baseline fall back to field averages.
+          Three features that were tested and added no predictive value (circuit chaos rate, teammate finish gap, new-team flag) were removed.
+        </p>
         <div className="space-y-1">
           {FEATURES.map((feat) => (
             <div key={feat.name} className="glass-card p-3 flex items-start gap-4 hover:bg-surface-2 transition-colors">
               <div className="flex items-center gap-2 w-28 shrink-0">
                 <div
-                  className="w-1 h-full min-h-[24px] rounded-full shrink-0"
+                  className="w-1 min-h-[24px] rounded-full shrink-0 self-stretch"
                   style={{ background: WEIGHT_COLORS[feat.weight] ?? "#888" }}
                 />
                 <span
@@ -139,25 +235,25 @@ export default function ModelPage() {
           </div>
           <h2 className="font-barlow font-800 text-xl uppercase tracking-wide text-platinum">Model Architecture</h2>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
           {[
             {
               name: "XGBoost Win",
               type: "Classifier",
               target: "Win probability",
-              desc: "Binary classifier with class imbalance correction (scale_pos_weight). Primary model.",
+              desc: "Binary classifier (position = 1). Uses scale_pos_weight to handle class imbalance — only 1 in 20 drivers wins per race.",
             },
             {
               name: "LightGBM Podium",
               type: "Classifier",
               target: "Top-3 probability",
-              desc: "Gradient boosting with is_unbalance=True. Captures podium likelihood independently.",
+              desc: "Gradient boosting with is_unbalance=True. Trained independently from the win model. Output is normalised so all drivers' podium probabilities sum to 3.0.",
             },
             {
               name: "XGBoost Position",
               type: "Regressor",
               target: "Predicted finish",
-              desc: "Regression model for full grid ordering. Used to resolve ties in the probability output.",
+              desc: "Regression model for full grid ordering. Resolves ties in probability output and determines predicted finishing rank.",
             },
           ].map((m) => (
             <div key={m.name} className="glass-card p-4">
@@ -172,30 +268,47 @@ export default function ModelPage() {
             </div>
           ))}
         </div>
-        <div className="mt-3 glass-card p-4 flex gap-3">
+        <div className="glass-card p-4 flex gap-3">
           <Zap size={14} className="text-muted shrink-0 mt-0.5" />
           <p className="font-inter text-xs text-muted leading-relaxed">
-            <span className="text-platinum font-500">Training:</span> TimeSeriesSplit cross-validation (4 folds) ensures
-            the model is never trained on future race data. Sample weights boost 2026 races 5× vs 2025, 10× vs 2024.
-            Models are retrained automatically every 4 completed races.
+            <span className="text-platinum font-500">Training: </span>
+            TimeSeriesSplit cross-validation (4 folds) ensures the model is never trained on future race data — no leakage.
+            Sample weights favour recent seasons: 2025 is weighted 3× more than 2023.
+            Trained on ~1,400 driver-race rows across 2023–2025. Models are retrained whenever new race results are added.
           </p>
         </div>
       </section>
 
-      {/* Accuracy context */}
-      <section>
+      {/* Accuracy */}
+      <section className="mb-12">
         <div className="flex items-center gap-3 mb-6">
           <div className="w-8 h-8 rounded-sm bg-surface-2 flex items-center justify-center">
             <TrendingUp size={16} className="text-muted" />
           </div>
-          <h2 className="font-barlow font-800 text-xl uppercase tracking-wide text-platinum">Accuracy Context</h2>
+          <h2 className="font-barlow font-800 text-xl uppercase tracking-wide text-platinum">Accuracy</h2>
         </div>
-        <div className="glass-card p-5 space-y-4">
+        <div className="glass-card p-5 space-y-4 mb-3">
           {[
-            { label: "Random baseline", value: "5%", desc: "Picking a random driver from 20 wins 5% of the time." },
-            { label: "Qualifying baseline", value: "~30%", desc: "Pole position converts to win roughly 30% of the time historically." },
-            { label: "Our target (post-qual)", value: "55-65%", desc: "With qualifying data, the model targets this range based on 2022-2025 backtesting." },
-            { label: "Pre-weekend accuracy", value: "35-45%", desc: "Without qualifying data, accuracy drops significantly — more uncertainty." },
+            {
+              label: "Random baseline",
+              value: "5%",
+              desc: "Picking any driver from a 20-car grid at random wins 5% of the time.",
+            },
+            {
+              label: "Pole position baseline",
+              value: "~30%",
+              desc: "Historically, the pole-sitter converts to a race win about 30% of the time.",
+            },
+            {
+              label: "CV winner accuracy",
+              value: "51.8%",
+              desc: "Measured via TimeSeriesSplit on 56 historical races. The model correctly picks the race winner in roughly 1 in 2 races — 10× better than random.",
+            },
+            {
+              label: "CV podium accuracy",
+              value: "64.3%",
+              desc: "Average overlap between predicted top-3 and actual top-3. Measured across the same 56 races.",
+            },
           ].map((row) => (
             <div key={row.label} className="flex items-baseline justify-between border-b border-border pb-4 last:border-0 last:pb-0">
               <div>
@@ -203,6 +316,30 @@ export default function ModelPage() {
                 <p className="font-inter text-xs text-muted">{row.desc}</p>
               </div>
               <span className="font-barlow font-900 text-xl text-f1-red tabular-nums ml-4 shrink-0">{row.value}</span>
+            </div>
+          ))}
+        </div>
+        <p className="font-inter text-xs text-muted pl-1">
+          These figures are from cross-validation on 2023–2025 data and will differ from live 2026 performance.
+        </p>
+      </section>
+
+      {/* Limitations */}
+      <section>
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-8 h-8 rounded-sm bg-surface-2 flex items-center justify-center">
+            <XCircle size={16} className="text-muted" />
+          </div>
+          <h2 className="font-barlow font-800 text-xl uppercase tracking-wide text-platinum">Known Limitations</h2>
+        </div>
+        <div className="space-y-2">
+          {LIMITATIONS.map((lim) => (
+            <div key={lim.title} className="glass-card p-4 flex gap-3">
+              <div className="w-1 shrink-0 rounded-full bg-amber-500/40 self-stretch" />
+              <div>
+                <p className="font-barlow font-700 text-sm text-platinum uppercase tracking-wide mb-1">{lim.title}</p>
+                <p className="font-inter text-xs text-muted leading-relaxed">{lim.desc}</p>
+              </div>
             </div>
           ))}
         </div>
