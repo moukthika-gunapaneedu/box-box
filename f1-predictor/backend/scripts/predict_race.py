@@ -201,6 +201,18 @@ def predict(round_num: int | None = None) -> dict:
     for rank, r in enumerate(results_by_pos, 1):
         r["predicted_finish"] = float(rank)
 
+    # Overlay actual qualifying grid positions for display (model predictions unchanged).
+    # If qualifying happened but a driver is absent (crashed/excluded), they go last.
+    try:
+        actual_quali = get_qualifying_results(CURRENT_SEASON, round_num)
+        if not actual_quali.empty:
+            last_pos = int(len(actual_quali)) + 1
+            quali_map = dict(zip(actual_quali["driverCode"], actual_quali["quali_position"].astype(int)))
+            for r in results:
+                r["quali_position"] = quali_map.get(r["driver_code"], last_pos)
+    except Exception:
+        pass  # keep model-derived positions if API unavailable
+
     # Season accuracy from history
     history = _load_history()
     ytd_acc = history.get("season_winner_accuracy") or 0.0
