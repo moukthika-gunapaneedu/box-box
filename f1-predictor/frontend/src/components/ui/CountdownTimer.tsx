@@ -5,13 +5,17 @@ import { cn } from "@/lib/utils";
 
 interface CountdownTimerProps {
   raceDate: string;
+  nextRaceDate?: string;
+  nextRaceName?: string;
   className?: string;
 }
 
-export default function CountdownTimer({ raceDate, className }: CountdownTimerProps) {
-  const { days, hours, minutes, seconds, isLive, isPast, totalSeconds } = useCountdown(raceDate);
+export default function CountdownTimer({ raceDate, nextRaceDate, nextRaceName, className }: CountdownTimerProps) {
+  const current = useCountdown(raceDate);
+  // Always call hook (rules of hooks) — fallback to raceDate if no nextRaceDate
+  const next = useCountdown(nextRaceDate ?? raceDate);
 
-  if (isLive) {
+  if (current.isLive) {
     return (
       <div className={cn("flex items-center gap-3", className)}>
         <span className="live-dot scale-125" />
@@ -22,7 +26,42 @@ export default function CountdownTimer({ raceDate, className }: CountdownTimerPr
     );
   }
 
-  if (isPast) {
+  // Race is over — show next race countdown if available
+  if (current.isPast) {
+    if (nextRaceDate && !next.isPast) {
+      const { days, hours, minutes, seconds } = next;
+      const isUrgent = next.totalSeconds < 3600;
+      return (
+        <div className={cn("flex items-center gap-2 sm:gap-4", className)}>
+          {[
+            { value: days, label: "D" },
+            { value: hours, label: "H" },
+            { value: minutes, label: "M" },
+            { value: seconds, label: "S" },
+          ].map(({ value, label }, i) => (
+            <div key={label} className="flex items-baseline gap-0.5">
+              {i > 0 && (
+                <span className={cn("font-barlow font-700 text-muted text-2xl sm:text-3xl mx-0.5", isUrgent && "text-f1-red/60")}>
+                  :
+                </span>
+              )}
+              <span
+                className={cn(
+                  "font-barlow font-800 tabular-nums text-3xl sm:text-4xl lg:text-5xl tracking-tight",
+                  isUrgent ? "text-f1-red animate-pulse-red" : "text-platinum"
+                )}
+              >
+                {String(value).padStart(2, "0")}
+              </span>
+              <span className="font-barlow font-600 text-muted text-sm uppercase ml-0.5 self-end mb-1">
+                {label}
+              </span>
+            </div>
+          ))}
+        </div>
+      );
+    }
+
     return (
       <span className={cn("font-barlow font-700 text-muted text-xl tracking-widest uppercase", className)}>
         Race Complete
@@ -30,6 +69,7 @@ export default function CountdownTimer({ raceDate, className }: CountdownTimerPr
     );
   }
 
+  const { days, hours, minutes, seconds, totalSeconds } = current;
   const isUrgent = totalSeconds < 3600;
 
   return (

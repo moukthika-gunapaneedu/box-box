@@ -5,9 +5,12 @@ import type { RacePrediction } from "@/lib/types";
 import CountdownTimer from "@/components/ui/CountdownTimer";
 import Pill from "@/components/ui/Pill";
 import PredictionCard from "./PredictionCard";
+import { useCountdown } from "@/hooks/useCountdown";
 
 interface HeroBannerProps {
   data: RacePrediction;
+  nextRaceDate?: string;
+  nextRaceName?: string;
 }
 
 const FRESHNESS_LABELS: Record<string, string> = {
@@ -17,9 +20,11 @@ const FRESHNESS_LABELS: Record<string, string> = {
   "race-day": "Race Day",
 };
 
-export default function HeroBanner({ data }: HeroBannerProps) {
+export default function HeroBanner({ data, nextRaceDate, nextRaceName }: HeroBannerProps) {
   const top3 = data.predictions.slice(0, 3);
   const pole = top3.find((p) => p.quali_position === 1) ?? top3[0];
+  const { isPast, isLive } = useCountdown(data.race_date);
+  const showingNextRace = isPast && !isLive && !!nextRaceDate;
 
   return (
     <section className="relative overflow-hidden bg-carbon border-b border-border">
@@ -89,9 +94,13 @@ export default function HeroBanner({ data }: HeroBannerProps) {
           className="mb-10"
         >
           <p className="font-barlow font-600 text-xs text-muted uppercase tracking-widest mb-2">
-            Race Start
+            {showingNextRace ? `Next Race · ${nextRaceName?.replace(" Grand Prix", "")}` : "Race Start"}
           </p>
-          <CountdownTimer raceDate={data.race_date} />
+          <CountdownTimer
+            raceDate={data.race_date}
+            nextRaceDate={nextRaceDate}
+            nextRaceName={nextRaceName}
+          />
         </motion.div>
 
         {/* Top 3 prediction cards */}

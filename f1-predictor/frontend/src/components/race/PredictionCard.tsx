@@ -5,7 +5,14 @@ import type { DriverPrediction } from "@/lib/types";
 import WinProbabilityBar from "@/components/charts/WinProbabilityBar";
 import PodiumRing from "@/components/charts/PodiumRing";
 import Pill from "@/components/ui/Pill";
+import Tooltip from "@/components/ui/Tooltip";
 import { cn } from "@/lib/utils";
+
+const CONFIDENCE_TOOLTIPS: Record<string, string> = {
+  high: "Strong prediction: pole or front-row start with high win probability.",
+  medium: "Moderate signals: top-6 grid or solid win/podium probability.",
+  low: "Limited signals — prediction based mainly on historical data.",
+};
 
 interface PredictionCardProps {
   prediction: DriverPrediction;
@@ -56,16 +63,20 @@ export default function PredictionCard({ prediction: p, rank, delay = 0 }: Predi
             <p className="font-inter text-xs text-muted">{p.team}</p>
           </div>
           <div className="flex flex-col items-end gap-1">
-            <PodiumRing probability={p.podium_probability} teamColor={p.team_color} size={44} delay={delay} />
+            <Tooltip text="Chance of finishing in the top 3 (P1, P2, or P3)." position="top">
+              <PodiumRing probability={p.podium_probability} teamColor={p.team_color} size={44} delay={delay} />
+            </Tooltip>
             <span className="font-inter text-[10px] text-muted">Podium %</span>
           </div>
         </div>
 
         {/* Win probability bar */}
         <div className="mb-3">
-          <p className="font-barlow font-600 text-xs text-muted uppercase tracking-widest mb-1.5">
-            Win Probability
-          </p>
+          <Tooltip text="Likelihood this driver wins the race. All 20 drivers combined = 100%." position="top">
+            <p className="font-barlow font-600 text-xs text-muted uppercase tracking-widest mb-1.5 cursor-default">
+              Win Probability
+            </p>
+          </Tooltip>
           <WinProbabilityBar
             probability={p.win_probability}
             teamColor={p.team_color}
@@ -75,13 +86,17 @@ export default function PredictionCard({ prediction: p, rank, delay = 0 }: Predi
 
         {/* Footer */}
         <div className="flex items-center justify-between">
-          <Pill
-            label={p.confidence.toUpperCase()}
-            variant={p.confidence}
-          />
-          <span className="font-barlow font-600 text-xs text-muted">
-            Grid P{p.quali_position}
-          </span>
+          <Tooltip text={CONFIDENCE_TOOLTIPS[p.confidence]} position="bottom">
+            <Pill
+              label={p.confidence.toUpperCase()}
+              variant={p.confidence}
+            />
+          </Tooltip>
+          <Tooltip text="Starting grid position from qualifying." position="bottom">
+            <span className="font-barlow font-600 text-xs text-muted cursor-default">
+              Grid P{p.quali_position}
+            </span>
+          </Tooltip>
         </div>
 
         {/* Key factors */}

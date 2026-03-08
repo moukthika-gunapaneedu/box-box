@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { getPredictionsStatic, getHistoryStatic } from "@/lib/data";
+import { getPredictionsStatic, getHistoryStatic, getCalendarStatic } from "@/lib/data";
 import HeroBanner from "@/components/race/HeroBanner";
 import PredictionGrid from "@/components/race/PredictionGrid";
 import DataFreshnessBadge from "@/components/race/DataFreshnessBadge";
@@ -11,10 +11,15 @@ import NextLink from "next/link";
 export const revalidate = 300; // revalidate every 5 minutes
 
 export default async function Home() {
-  const [data, history] = await Promise.all([
+  const [data, history, calendar] = await Promise.all([
     getPredictionsStatic(),
     getHistoryStatic(),
+    getCalendarStatic(),
   ]);
+
+  const nextRace = data && calendar
+    ? calendar.races.find((r) => r.round > data.round)
+    : null;
 
   if (!data) {
     return (
@@ -36,7 +41,11 @@ export default async function Home() {
     <div>
       {/* Hero */}
       <Suspense fallback={<HeroBannerSkeleton />}>
-        <HeroBanner data={data} />
+        <HeroBanner
+          data={data}
+          nextRaceDate={nextRace?.race_datetime}
+          nextRaceName={nextRace?.name}
+        />
       </Suspense>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
