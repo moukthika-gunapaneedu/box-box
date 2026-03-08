@@ -21,7 +21,7 @@ from utils import season_weight, DRIVERS_2026, OVERTAKE_INDEX, get_circuit_type
 DATA_DIR = Path(__file__).parent.parent / "data"
 DATA_DIR.mkdir(exist_ok=True)
 
-HISTORY_SEASONS = [2022, 2023, 2024, 2025]
+HISTORY_SEASONS = [2023, 2024, 2025]  # 2022 dropped: first year of ground-effect regs, teaches wrong patterns
 
 
 # ---------------------------------------------------------------------------
@@ -102,15 +102,18 @@ def _build_race_features(
     except Exception:
         fp_pace = pd.DataFrame()
 
-    # Driver standings: use previous round to avoid leakage.
+    # Driver + constructor standings: use previous round to avoid leakage.
     # For round 1, use end of prior season standings.
     try:
         if round_num == 1:
             standings = get_driver_standings(year - 1)
+            con_standings = get_constructor_standings(year - 1)
         else:
             standings = get_driver_standings(year, round_num - 1)
+            con_standings = get_constructor_standings(year, round_num - 1)
     except Exception:
         standings = pd.DataFrame()
+        con_standings = pd.DataFrame()
 
     rows = []
     for _, race_row in race_results.iterrows():
@@ -124,6 +127,7 @@ def _build_race_features(
             quali_df=quali,
             fp_pace_df=fp_pace,
             standings_df=standings,
+            con_standings_df=con_standings,
         )
         feats["season"] = year
         feats["round"] = round_num
@@ -148,19 +152,28 @@ def _driver_features(
     quali_df: pd.DataFrame,
     fp_pace_df: pd.DataFrame,
     standings_df: pd.DataFrame = pd.DataFrame(),
+    con_standings_df: pd.DataFrame = pd.DataFrame(),
 ) -> dict:
     """Compute all features for a single driver in a single race."""
     feats: dict = {"driverCode": driver_code}
 
     # ---- Qualifying features ----
+    # Fallback: driver's average grid position from recent races (much better than flat P15)
+    driver_past_for_quali = past_results[past_results["driverCode"] == driver_code]
+    if not driver_past_for_quali.empty and "grid" in driver_past_for_quali.columns:
+        avg_grid = float(driver_past_for_quali.tail(10)["grid"].replace(0, pd.NA).dropna().mean())
+        quali_fallback = int(round(avg_grid)) if not pd.isna(avg_grid) else 15
+    else:
+        quali_fallback = 15
+
     if not quali_df.empty and "driverCode" in quali_df.columns:
         dq = quali_df[quali_df["driverCode"] == driver_code]
         if not dq.empty:
             feats["quali_position"] = int(dq.iloc[0]["quali_position"])
         else:
-            feats["quali_position"] = 15  # default mid-grid
+            feats["quali_position"] = quali_fallback
     else:
-        feats["quali_position"] = 15
+        feats["quali_position"] = quali_fallback
 
     # Qualifying gap to pole (percentage)
     if not quali_df.empty and "best_time" in quali_df.columns:
@@ -170,9 +183,12 @@ def _driver_features(
             driver_time = times[driver_code]
             feats["quali_gap_to_pole_pct"] = (driver_time - pole_time) / pole_time * 100
         else:
-            feats["quali_gap_to_pole_pct"] = 5.0
+            # Estimate gap from average grid position relative to field size
+            field_size = max(len(quali_df), 20)
+            feats["quali_gap_to_pole_pct"] = (feats["quali_position"] - 1) / field_size * 3.0
     else:
-        feats["quali_gap_to_pole_pct"] = 5.0
+        field_size = 20
+        feats["quali_gap_to_pole_pct"] = (feats["quali_position"] - 1) / field_size * 3.0
 
     # ---- Recent form (last 5 races) ----
     driver_past = past_results[past_results["driverCode"] == driver_code].copy()
@@ -189,10 +205,17 @@ def _driver_features(
             feats["positions_gained_avg"] = float(gains.mean())
         else:
             feats["positions_gained_avg"] = 0.0
+
+        # Career win rate and podium rate — captures all-time ability regardless of team switch
+        total_starts = len(driver_past)
+        feats["career_win_rate"] = float((driver_past["position"] == 1).sum() / total_starts)
+        feats["career_podium_rate"] = float((driver_past["position"] <= 3).sum() / total_starts)
     else:
         feats["recent_form_5"] = 10.0
         feats["dnf_rate_10"] = 0.1
         feats["positions_gained_avg"] = 0.0
+        feats["career_win_rate"] = 0.0
+        feats["career_podium_rate"] = 0.0
 
     # ---- Circuit historical average ----
     circuit = race_meta.get("circuit", "")
@@ -239,9 +262,16 @@ def _driver_features(
     circuit_type = race_meta.get("circuit_type") or get_circuit_type(race_meta.get("circuit", ""))
     feats["overtake_difficulty"] = OVERTAKE_INDEX.get(circuit_type, 0.6)
 
-    # ---- Is new team (Cadillac) ----
-    driver_info = DRIVERS_2026.get(driver_code, {})
-    feats["is_new_team"] = int(driver_info.get("team", "") == "Cadillac")
+    # ---- Constructor championship position ----
+    if not con_standings_df.empty and constructor_id and "constructorId" in con_standings_df.columns:
+        crow = con_standings_df[con_standings_df["constructorId"] == constructor_id]
+        con_field_size = max(len(con_standings_df), 1)
+        if not crow.empty:
+            feats["constructor_champ_pos_norm"] = float(crow.iloc[0]["position"]) / con_field_size
+        else:
+            feats["constructor_champ_pos_norm"] = 1.0  # unknown = last
+    else:
+        feats["constructor_champ_pos_norm"] = 0.5  # neutral default
 
     # ---- Championship standing ----
     # Uses standings from prior round (or prior season for round 1) to avoid
@@ -319,10 +349,13 @@ def build_inference_features(
     try:
         if round_num == 1:
             standings = get_driver_standings(year - 1)
+            con_standings = get_constructor_standings(year - 1)
         else:
             standings = get_driver_standings(year, round_num - 1)
+            con_standings = get_constructor_standings(year, round_num - 1)
     except Exception:
         standings = pd.DataFrame()
+        con_standings = pd.DataFrame()
 
     rows = []
     for code in drivers:
@@ -335,6 +368,7 @@ def build_inference_features(
             quali_df=quali,
             fp_pace_df=fp_pace,
             standings_df=standings,
+            con_standings_df=con_standings,
         )
         feats["season"] = year
         feats["round"] = round_num
@@ -352,9 +386,11 @@ FEATURE_COLS = [
     "team_reliability_score",
     "fp_pace_delta_pct",
     "overtake_difficulty",
-    "is_new_team",
     "positions_gained_avg",
     "team_race_pace_rank",
     "champ_position_norm",
     "champ_points",
+    "career_win_rate",
+    "career_podium_rate",
+    "constructor_champ_pos_norm",
 ]
