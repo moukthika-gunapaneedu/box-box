@@ -15,6 +15,7 @@ from collect_data import (
     get_constructor_standings,
     get_driver_standings,
     get_fp_pace,
+    get_race_weather,
 )
 from utils import season_weight, DRIVERS_2026, OVERTAKE_INDEX, get_circuit_type
 
@@ -119,6 +120,12 @@ def _build_race_features(
         standings = pd.DataFrame()
         con_standings = pd.DataFrame()
 
+    # Race weather (fetched once, applied to all drivers)
+    try:
+        weather_dict = get_race_weather(year, round_num)
+    except Exception:
+        weather_dict = {"is_raining": 0, "track_temp_celsius": 30.0}
+
     rows = []
     for _, race_row in race_results.iterrows():
         code = race_row["driverCode"]
@@ -132,6 +139,7 @@ def _build_race_features(
             fp_pace_df=fp_pace,
             standings_df=standings,
             con_standings_df=con_standings,
+            weather_dict=weather_dict,
         )
         feats["season"] = year
         feats["round"] = round_num
@@ -157,9 +165,12 @@ def _driver_features(
     fp_pace_df: pd.DataFrame,
     standings_df: pd.DataFrame = pd.DataFrame(),
     con_standings_df: pd.DataFrame = pd.DataFrame(),
+    weather_dict: dict | None = None,
 ) -> dict:
     """Compute all features for a single driver in a single race."""
     feats: dict = {"driverCode": driver_code}
+    if weather_dict is None:
+        weather_dict = {"is_raining": 0, "track_temp_celsius": 30.0}
 
     # ---- Qualifying features ----
     # Fallback: driver's average grid position from recent races (much better than flat P15)
@@ -339,6 +350,10 @@ def _driver_features(
         feats["champ_position_norm"] = 0.5  # neutral default
         feats["champ_points"] = 0.0
 
+    # ---- Weather features ----
+    feats["is_raining"] = int(weather_dict.get("is_raining", 0))
+    feats["track_temp_celsius"] = float(weather_dict.get("track_temp_celsius", 30.0))
+
     # ---- Season weight (applied as sample_weight, not a model feature) ----
     # (stored separately in build_race_features)
 
@@ -409,6 +424,11 @@ def build_inference_features(
         standings = pd.DataFrame()
         con_standings = pd.DataFrame()
 
+    try:
+        weather_dict = get_race_weather(year, round_num)
+    except Exception:
+        weather_dict = {"is_raining": 0, "track_temp_celsius": 30.0}
+
     rows = []
     for code in drivers:
         feats = _driver_features(
@@ -421,6 +441,7 @@ def build_inference_features(
             fp_pace_df=fp_pace,
             standings_df=standings,
             con_standings_df=con_standings,
+            weather_dict=weather_dict,
         )
         feats["season"] = year
         feats["round"] = round_num
@@ -446,6 +467,8 @@ FEATURE_COLS = [
     "career_podium_rate",
     "constructor_champ_pos_norm",
     "recent_season_avg_pos",
+    "is_raining",
+    "track_temp_celsius",
     # circuit_chaos_rate: tested, contributes 0% — removed
     # teammate_finish_gap: tested, +win but -podium, net zero — removed
 ]

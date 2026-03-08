@@ -281,3 +281,44 @@ def get_weather_forecast(session_key: int) -> dict:
         "wind_speed": latest.get("wind_speed"),
         "humidity": latest.get("humidity"),
     }
+
+
+def get_race_weather(year: int, round_num: int) -> dict:
+    """
+    Return aggregated weather conditions for a race session.
+    Returns: {'is_raining': 0|1, 'track_temp_celsius': float}
+    Uses first ~10 weather readings to represent race start conditions.
+    """
+    _DEFAULT = {"is_raining": 0, "track_temp_celsius": 30.0}
+    try:
+        sessions = get_openf1_sessions(year)
+        race_sessions = [s for s in sessions if s.get("session_type") == "Race"]
+        if not race_sessions:
+            return _DEFAULT
+
+        # Try matching by round_number (works for 2023-2025)
+        target = [s for s in race_sessions if s.get("round_number") == round_num]
+
+        # Fallback: sort by date and use round index (handles 2026 where round_number=None)
+        if not target:
+            race_sessions_sorted = sorted(race_sessions, key=lambda x: x.get("date_start", ""))
+            if round_num <= len(race_sessions_sorted):
+                target = [race_sessions_sorted[round_num - 1]]
+
+        if not target:
+            return _DEFAULT
+
+        session_key = target[0]["session_key"]
+        weather = get_openf1_weather(session_key)
+        if not weather:
+            return _DEFAULT
+
+        # Use first 10 readings (race start conditions)
+        sample = sorted(weather, key=lambda x: x.get("date", ""))[:10]
+        is_raining = int(any(w.get("rainfall", False) for w in sample))
+        temps = [w["track_temperature"] for w in sample if w.get("track_temperature") is not None]
+        track_temp = float(sum(temps) / len(temps)) if temps else 30.0
+
+        return {"is_raining": is_raining, "track_temp_celsius": track_temp}
+    except Exception:
+        return _DEFAULT
