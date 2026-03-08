@@ -153,9 +153,14 @@ def predict(round_num: int | None = None) -> dict:
     if win_probs.sum() > 0:
         win_probs = win_probs / win_probs.sum()
 
-    # Normalize podium probabilities
+    # Normalize podium probabilities: exactly 3 podium spots exist, so the sum
+    # of all drivers' podium probabilities must equal 3.0. Without this, the
+    # uncalibrated LGB model hands out inflated probabilities to everyone.
     pod_probs = np.array(pod_probs, dtype=float)
     pod_probs = np.clip(pod_probs, 0, 1)
+    if pod_probs.sum() > 0:
+        pod_probs = pod_probs / pod_probs.sum() * 3.0
+        pod_probs = np.clip(pod_probs, 0, 1)
 
     # Enforce logical constraint: podium % >= win % (a win is a subset of a podium)
     pod_probs = np.maximum(pod_probs, win_probs)
@@ -184,18 +189,17 @@ def predict(round_num: int | None = None) -> dict:
             "quali_position": int(features_df.iloc[i].get("quali_position", 0)),
         })
 
+    # Sort by win probability — P1 = most likely to win.
+    # Podium % is normalized to sum to 3.0 so it's consistent with this ranking.
     results.sort(key=lambda x: x["win_probability"], reverse=True)
     for i, r in enumerate(results):
         r["position"] = i + 1
 
-    # Fix predicted_finish: assign unique integer ranks based on xgb_pos output.
-    # Ties broken by win_probability (descending) to stay consistent with position ordering.
+    # Fix predicted_finish: unique integer ranks from regression model,
+    # ties broken by win_probability.
     results_by_pos = sorted(results, key=lambda x: (x["predicted_finish"], -x["win_probability"]))
     for rank, r in enumerate(results_by_pos, 1):
         r["predicted_finish"] = float(rank)
-
-    # Restore win_probability sort order for final output
-    results.sort(key=lambda x: x["win_probability"], reverse=True)
 
     # Season accuracy from history
     history = _load_history()
