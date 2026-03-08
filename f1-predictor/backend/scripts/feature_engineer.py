@@ -164,14 +164,22 @@ def _driver_features(
     # ---- Recent form (last 5 races) ----
     driver_past = past_results[past_results["driverCode"] == driver_code].copy()
     if not driver_past.empty:
-        last5 = driver_past.sort_values(["season", "round"]).tail(5)["position"]
-        feats["recent_form_5"] = float(last5.mean()) if len(last5) > 0 else 10.0
+        last5 = driver_past.sort_values(["season", "round"]).tail(5)
+        feats["recent_form_5"] = float(last5["position"].mean()) if len(last5) > 0 else 10.0
         last10 = driver_past.sort_values(["season", "round"]).tail(10)
         dnf_mask = ~last10["status"].str.lower().str.contains("finish", na=False)
         feats["dnf_rate_10"] = float(dnf_mask.mean())
+
+        # Average positions gained from grid to finish (positive = charges forward)
+        if "grid_position" in last5.columns:
+            gains = last5["grid_position"] - last5["position"]
+            feats["positions_gained_avg"] = float(gains.mean())
+        else:
+            feats["positions_gained_avg"] = 0.0
     else:
         feats["recent_form_5"] = 10.0
         feats["dnf_rate_10"] = 0.1
+        feats["positions_gained_avg"] = 0.0
 
     # ---- Circuit historical average ----
     circuit = race_meta.get("circuit", "")
@@ -196,15 +204,23 @@ def _driver_features(
             feats["team_reliability_score"] = float(1 - dnf_mask_team.mean())
         else:
             feats["team_reliability_score"] = 0.9
+
+        # Team race pace rank: average finishing position of the constructor
+        # across recent races (lower = faster car, independent of qualifying)
+        team_recent = past_results[past_results["constructorId"] == constructor_id].tail(20)
+        feats["team_race_pace_rank"] = float(team_recent["position"].mean()) if not team_recent.empty else 10.0
     else:
         feats["team_reliability_score"] = 0.9
+        feats["team_race_pace_rank"] = 10.0
 
     # ---- FP2 pace delta ----
     if not fp_pace_df.empty and driver_code in fp_pace_df["driverCode"].values:
         fp_row = fp_pace_df[fp_pace_df["driverCode"] == driver_code].iloc[0]
         feats["fp_pace_delta_pct"] = float(fp_row["fp_pace_delta_pct"])
     else:
-        feats["fp_pace_delta_pct"] = feats["quali_gap_to_pole_pct"] * 0.9  # proxy
+        # Fall back to team race pace rank converted to a pace estimate,
+        # not quali (which may itself be missing/wrong)
+        feats["fp_pace_delta_pct"] = (feats["team_race_pace_rank"] - 1) * 0.15
 
     # ---- Circuit type (looked up from circuit name, never hardcoded) ----
     circuit_type = race_meta.get("circuit_type") or get_circuit_type(race_meta.get("circuit", ""))
@@ -297,4 +313,6 @@ FEATURE_COLS = [
     "fp_pace_delta_pct",
     "overtake_difficulty",
     "is_new_team",
+    "positions_gained_avg",
+    "team_race_pace_rank",
 ]

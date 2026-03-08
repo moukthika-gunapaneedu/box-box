@@ -230,13 +230,18 @@ def predict(round_num: int | None = None) -> dict:
 
 def _heuristic_predictions(df: pd.DataFrame) -> tuple:
     """
-    Fallback when models aren't trained: score based on quali position + form.
+    Fallback when models aren't trained: score based on multiple signals.
     Lower = better. Invert for probability.
+    Qualifying is one signal, not the dominant one.
     """
+    # positions_gained_avg: higher = better, so negate it
+    positions_gained = df["positions_gained_avg"].fillna(0)
     scores = (
-        df["quali_position"] * 0.6 +
-        df["recent_form_5"].fillna(10) * 0.2 +
-        df["fp_pace_delta_pct"].fillna(5) * 0.2
+        df["quali_position"].fillna(15) * 0.30 +
+        df["recent_form_5"].fillna(10) * 0.25 +
+        df["team_race_pace_rank"].fillna(10) * 0.25 +
+        df["fp_pace_delta_pct"].fillna(2) * 0.10 +
+        (-positions_gained).clip(lower=-10) * 0.10
     ).values
 
     # Convert to win probability (inverse rank-based)
