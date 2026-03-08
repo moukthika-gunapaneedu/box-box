@@ -1,4 +1,4 @@
-name: Deploy to GitHub Pages                                                                                                                                                                  
+name: Deploy to GitHub Pages
 
   on:
     push:
@@ -11,7 +11,7 @@ name: Deploy to GitHub Pages
     id-token: write
 
   concurrency:
-    group: "pages"
+    group: pages
     cancel-in-progress: false
 
   jobs:
