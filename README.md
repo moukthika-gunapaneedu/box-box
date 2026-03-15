@@ -24,8 +24,8 @@ An AI-powered Formula 1 race prediction platform for the 2026 season. Box-box co
 
 | Layer | Tools |
 |---|---|
-| Frontend | Next.js 15, TypeScript, TailwindCSS, Recharts, Framer Motion, Radix UI |
-| Backend | Python, XGBoost, LightGBM, scikit-learn, FastF1 |
+| Frontend | Next.js 15, TypeScript, TailwindCSS, Recharts, Framer Motion |
+| Backend | Python, XGBoost, LightGBM, scikit-learn, pandas |
 | Data | OpenF1 API, Jolpica (Ergast replacement) |
 | Deploy | GitHub Pages + GitHub Actions |
 
@@ -54,6 +54,12 @@ box-box/
     │   │   └── training_features.parquet
     │   └── requirements.txt
     └── frontend/
+        ├── public/
+        │   └── data/                  # Static JSON consumed by the frontend
+        │       ├── predictions.json   # Current race predictions
+        │       ├── history.json       # Post-race results + accuracy
+        │       ├── calendar.json      # 2026 season calendar
+        │       └── metrics.json       # CV accuracy metrics
         └── src/
             ├── app/                   # Pages: home, drivers, races, model
             ├── components/            # Race cards, charts, layout
@@ -70,7 +76,7 @@ box-box/
 3. **Post-race**: actual results are recorded, compared against predictions, and accuracy metrics are updated
 4. **Retrain**: new race data is folded into the training set and models are updated
 
-Models are trained on 2023–2025 historical data using `TimeSeriesSplit` cross-validation to prevent data leakage. Current accuracy: ~51.8% winner, ~64.3% podium across 56 races.
+Models are trained on 2023–2026 historical data using `TimeSeriesSplit` cross-validation to prevent data leakage. 2026 race results are weighted 5× more than 2025 to reflect the new regulations. Current CV accuracy: ~48.2% winner, ~64.3% podium across 56 races.
 
 ---
 
