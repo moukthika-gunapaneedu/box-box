@@ -5,19 +5,25 @@
       "race": "Australian Grand Prix",
       "circuit": "Albert Park Grand Prix Circuit",
       "race_date": "2026-03-08",
-      "predicted_winner": "N/A",
+      "predicted_winner": "RUS",
       "actual_winner": "RUS",
-      "correct_win": false,
-      "predicted_podium": [],
-      "actual_podium": [
-        "RUS",
-        "ANT",
-        "LEC"
+      "correct_win": true,
+      "predicted_podium": ["RUS", "VER", "ANT"],
+      "actual_podium": ["RUS", "ANT", "LEC"],
+      "podium_hits": 2,
+      "predicted_top3": [
+        { "driver_code": "RUS", "driver_name": "George Russell", "team": "Mercedes", "team_color": "#27F4D2", "win_probability": 0.776, "podium_probability": 0.776 },
+        { "driver_code": "VER", "driver_name": "Max Verstappen", "team": "Red Bull Racing", "team_color": "#3671C6", "win_probability": 0.176, "podium_probability": 0.362 },
+        { "driver_code": "ANT", "driver_name": "Kimi Antonelli", "team": "Mercedes", "team_color": "#27F4D2", "win_probability": 0.018, "podium_probability": 0.362 }
       ],
-      "podium_hits": 0,
+      "actual_top3": [
+        { "driver_code": "RUS", "driver_name": "George Russell", "team": "Mercedes", "team_color": "#27F4D2" },
+        { "driver_code": "ANT", "driver_name": "Kimi Antonelli", "team": "Mercedes", "team_color": "#27F4D2" },
+        { "driver_code": "LEC", "driver_name": "Charles Leclerc", "team": "Ferrari", "team_color": "#E8002D" }
+      ],
       "updated_at": "2026-03-15T06:51:24.340480+00:00"
     }
   ],
-  "season_winner_accuracy": 0.0,
-  "season_podium_accuracy": 0.0
+  "season_winner_accuracy": 1.0,
+  "season_podium_accuracy": 0.667
 }

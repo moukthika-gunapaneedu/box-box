@@ -27,6 +27,15 @@ export interface RacePrediction {
   season: number;
 }
 
+export interface PodiumEntry {
+  driver_code: string;
+  driver_name: string;
+  team: string;
+  team_color: string;
+  win_probability?: number;
+  podium_probability?: number;
+}
+
 export interface RaceResult {
   round: number;
   race: string;
@@ -38,6 +47,8 @@ export interface RaceResult {
   predicted_podium: string[];
   actual_podium: string[];
   podium_hits: number;
+  predicted_top3?: PodiumEntry[];
+  actual_top3?: PodiumEntry[];
   updated_at: string;
 }
 

@@ -147,20 +147,26 @@ def predict(round_num: int | None = None) -> dict:
         win_probs, pod_probs, pos_preds = _heuristic_predictions(features_df)
         model_source = "heuristic"
 
-    # Normalize win probabilities to sum to 1
+    # Normalize win probabilities to sum to 1, then apply temperature scaling
+    # to prevent one driver dominating with 80-90%+ (uncalibrated model artefact).
+    # T=3 spreads the distribution while preserving relative ranking.
+    WIN_TEMP = 3.0
     win_probs = np.array(win_probs, dtype=float)
-    win_probs = np.clip(win_probs, 0, 1)
-    if win_probs.sum() > 0:
-        win_probs = win_probs / win_probs.sum()
+    win_probs = np.clip(win_probs, 1e-9, 1)
+    win_probs = win_probs / win_probs.sum()
+    win_probs = win_probs ** (1.0 / WIN_TEMP)
+    win_probs = win_probs / win_probs.sum()
 
     # Normalize podium probabilities: exactly 3 podium spots exist, so the sum
     # of all drivers' podium probabilities must equal 3.0. Without this, the
     # uncalibrated LGB model hands out inflated probabilities to everyone.
+    POD_TEMP = 2.0
     pod_probs = np.array(pod_probs, dtype=float)
+    pod_probs = np.clip(pod_probs, 1e-9, 1)
+    pod_probs = pod_probs / pod_probs.sum()
+    pod_probs = pod_probs ** (1.0 / POD_TEMP)
+    pod_probs = pod_probs / pod_probs.sum() * 3.0
     pod_probs = np.clip(pod_probs, 0, 1)
-    if pod_probs.sum() > 0:
-        pod_probs = pod_probs / pod_probs.sum() * 3.0
-        pod_probs = np.clip(pod_probs, 0, 1)
 
     # Enforce logical constraint: podium % >= win % (a win is a subset of a podium)
     pod_probs = np.maximum(pod_probs, win_probs)
