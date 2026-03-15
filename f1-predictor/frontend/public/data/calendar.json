@@ -30,24 +30,6 @@
     },
     {
       "round": 4,
-      "name": "Bahrain Grand Prix",
-      "circuit": "Bahrain International Circuit",
-      "country": "Bahrain",
-      "locality": "Sakhir",
-      "date": "2026-04-12",
-      "race_datetime": "2026-04-12T15:00:00Z"
-    },
-    {
-      "round": 5,
-      "name": "Saudi Arabian Grand Prix",
-      "circuit": "Jeddah Corniche Circuit",
-      "country": "Saudi Arabia",
-      "locality": "Jeddah",
-      "date": "2026-04-19",
-      "race_datetime": "2026-04-19T17:00:00Z"
-    },
-    {
-      "round": 6,
       "name": "Miami Grand Prix",
       "circuit": "Miami International Autodrome",
       "country": "USA",
@@ -56,7 +38,7 @@
       "race_datetime": "2026-05-03T20:00:00Z"
     },
     {
-      "round": 7,
+      "round": 5,
       "name": "Canadian Grand Prix",
       "circuit": "Circuit Gilles Villeneuve",
       "country": "Canada",
@@ -65,7 +47,7 @@
       "race_datetime": "2026-05-24T20:00:00Z"
     },
     {
-      "round": 8,
+      "round": 6,
       "name": "Monaco Grand Prix",
       "circuit": "Circuit de Monaco",
       "country": "Monaco",
@@ -74,7 +56,7 @@
       "race_datetime": "2026-06-07T13:00:00Z"
     },
     {
-      "round": 9,
+      "round": 7,
       "name": "Barcelona Grand Prix",
       "circuit": "Circuit de Barcelona-Catalunya",
       "country": "Spain",
@@ -83,7 +65,7 @@
       "race_datetime": "2026-06-14T13:00:00Z"
     },
     {
-      "round": 10,
+      "round": 8,
       "name": "Austrian Grand Prix",
       "circuit": "Red Bull Ring",
       "country": "Austria",
@@ -92,7 +74,7 @@
       "race_datetime": "2026-06-28T13:00:00Z"
     },
     {
-      "round": 11,
+      "round": 9,
       "name": "British Grand Prix",
       "circuit": "Silverstone Circuit",
       "country": "UK",
@@ -101,7 +83,7 @@
       "race_datetime": "2026-07-05T14:00:00Z"
     },
     {
-      "round": 12,
+      "round": 10,
       "name": "Belgian Grand Prix",
       "circuit": "Circuit de Spa-Francorchamps",
       "country": "Belgium",
@@ -110,7 +92,7 @@
       "race_datetime": "2026-07-19T13:00:00Z"
     },
     {
-      "round": 13,
+      "round": 11,
       "name": "Hungarian Grand Prix",
       "circuit": "Hungaroring",
       "country": "Hungary",
@@ -119,7 +101,7 @@
       "race_datetime": "2026-07-26T13:00:00Z"
     },
     {
-      "round": 14,
+      "round": 12,
       "name": "Dutch Grand Prix",
       "circuit": "Circuit Park Zandvoort",
       "country": "Netherlands",
@@ -128,7 +110,7 @@
       "race_datetime": "2026-08-23T13:00:00Z"
     },
     {
-      "round": 15,
+      "round": 13,
       "name": "Italian Grand Prix",
       "circuit": "Autodromo Nazionale di Monza",
       "country": "Italy",
@@ -137,7 +119,7 @@
       "race_datetime": "2026-09-06T13:00:00Z"
     },
     {
-      "round": 16,
+      "round": 14,
       "name": "Spanish Grand Prix",
       "circuit": "Madring",
       "country": "Spain",
@@ -146,7 +128,7 @@
       "race_datetime": "2026-09-13T13:00:00Z"
     },
     {
-      "round": 17,
+      "round": 15,
       "name": "Azerbaijan Grand Prix",
       "circuit": "Baku City Circuit",
       "country": "Azerbaijan",
@@ -155,7 +137,7 @@
       "race_datetime": "2026-09-26T11:00:00Z"
     },
     {
-      "round": 18,
+      "round": 16,
       "name": "Singapore Grand Prix",
       "circuit": "Marina Bay Street Circuit",
       "country": "Singapore",
@@ -164,7 +146,7 @@
       "race_datetime": "2026-10-11T12:00:00Z"
     },
     {
-      "round": 19,
+      "round": 17,
       "name": "United States Grand Prix",
       "circuit": "Circuit of the Americas",
       "country": "USA",
@@ -173,7 +155,7 @@
       "race_datetime": "2026-10-25T20:00:00Z"
     },
     {
-      "round": 20,
+      "round": 18,
       "name": "Mexico City Grand Prix",
       "circuit": "Aut\u00f3dromo Hermanos Rodr\u00edguez",
       "country": "Mexico",
@@ -182,7 +164,7 @@
       "race_datetime": "2026-11-01T20:00:00Z"
     },
     {
-      "round": 21,
+      "round": 19,
       "name": "Brazilian Grand Prix",
       "circuit": "Aut\u00f3dromo Jos\u00e9 Carlos Pace",
       "country": "Brazil",
@@ -191,7 +173,7 @@
       "race_datetime": "2026-11-08T17:00:00Z"
     },
     {
-      "round": 22,
+      "round": 20,
       "name": "Las Vegas Grand Prix",
       "circuit": "Las Vegas Strip Street Circuit",
       "country": "USA",
@@ -200,7 +182,7 @@
       "race_datetime": "2026-11-22T04:00:00Z"
     },
     {
-      "round": 23,
+      "round": 21,
       "name": "Qatar Grand Prix",
       "circuit": "Losail International Circuit",
       "country": "Qatar",
@@ -209,7 +191,7 @@
       "race_datetime": "2026-11-29T16:00:00Z"
     },
     {
-      "round": 24,
+      "round": 22,
       "name": "Abu Dhabi Grand Prix",
       "circuit": "Yas Marina Circuit",
       "country": "UAE",

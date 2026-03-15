@@ -9,8 +9,7 @@ import sys
 from pathlib import Path
 from datetime import datetime, timezone
 
-from collect_data import get_race_results
-from utils import CALENDAR_2026
+from collect_data import get_race_results, get_race_calendar
 
 FRONTEND_DATA = Path(__file__).parent.parent.parent / "frontend" / "public" / "data"
 FRONTEND_DATA.mkdir(parents=True, exist_ok=True)
@@ -21,7 +20,8 @@ RETRAIN_THRESHOLD = 4  # retrain after every 4 completed races
 
 def update(round_num: int) -> None:
     """Fetch race result and update history.json with prediction vs actual."""
-    race_meta = next((r for r in CALENDAR_2026 if r["round"] == round_num), None)
+    calendar = get_race_calendar(CURRENT_SEASON)
+    race_meta = next((r for r in calendar if r["round"] == round_num), None)
     if not race_meta:
         print(f"Round {round_num} not found in calendar.")
         return

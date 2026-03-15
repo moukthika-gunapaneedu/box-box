@@ -2,26 +2,39 @@ import { getHistoryStatic, getPredictionsStatic } from "@/lib/data";
 import { TEAM_COLORS } from "@/lib/teamColors";
 
 const DRIVERS_2026 = [
+  // Red Bull Racing
   { code: "VER", name: "Max Verstappen",    team: "Red Bull Racing", number: 1  },
-  { code: "LAW", name: "Liam Lawson",       team: "Red Bull Racing", number: 30 },
+  { code: "HAD", name: "Isack Hadjar",      team: "Red Bull Racing", number: 6  },
+  // Ferrari
   { code: "LEC", name: "Charles Leclerc",   team: "Ferrari",         number: 16 },
   { code: "HAM", name: "Lewis Hamilton",    team: "Ferrari",         number: 44 },
+  // McLaren
   { code: "NOR", name: "Lando Norris",      team: "McLaren",         number: 4  },
   { code: "PIA", name: "Oscar Piastri",     team: "McLaren",         number: 81 },
+  // Mercedes
   { code: "RUS", name: "George Russell",    team: "Mercedes",        number: 63 },
   { code: "ANT", name: "Kimi Antonelli",    team: "Mercedes",        number: 12 },
+  // Aston Martin
   { code: "ALO", name: "Fernando Alonso",   team: "Aston Martin",    number: 14 },
   { code: "STR", name: "Lance Stroll",      team: "Aston Martin",    number: 18 },
+  // Alpine
   { code: "GAS", name: "Pierre Gasly",      team: "Alpine",          number: 10 },
-  { code: "DOO", name: "Jack Doohan",       team: "Alpine",          number: 7  },
+  { code: "COL", name: "Franco Colapinto",  team: "Alpine",          number: 43 },
+  // Williams
   { code: "ALB", name: "Alexander Albon",   team: "Williams",        number: 23 },
   { code: "SAI", name: "Carlos Sainz",      team: "Williams",        number: 55 },
-  { code: "TSU", name: "Yuki Tsunoda",      team: "RB",              number: 22 },
-  { code: "HAD", name: "Isack Hadjar",      team: "RB",              number: 6  },
-  { code: "HUL", name: "Nico Hulkenberg",   team: "Haas",            number: 27 },
+  // RB
+  { code: "LAW", name: "Liam Lawson",       team: "RB",              number: 30 },
+  { code: "LIN", name: "Arvid Lindblad",    team: "RB",              number: 2  },
+  // Audi (formerly Kick Sauber)
+  { code: "HUL", name: "Nico Hulkenberg",   team: "Audi",            number: 27 },
+  { code: "BOR", name: "Gabriel Bortoleto", team: "Audi",            number: 5  },
+  // Haas
+  { code: "OCO", name: "Esteban Ocon",      team: "Haas",            number: 31 },
   { code: "BEA", name: "Oliver Bearman",    team: "Haas",            number: 87 },
-  { code: "BOT", name: "Valtteri Bottas",   team: "Kick Sauber",     number: 77 },
-  { code: "BOR", name: "Gabriel Bortoleto", team: "Kick Sauber",     number: 5  },
+  // Cadillac
+  { code: "PER", name: "Sergio Perez",      team: "Cadillac",        number: 11 },
+  { code: "BOT", name: "Valtteri Bottas",   team: "Cadillac",        number: 77 },
 ];
 
 const TEAMS = [...new Set(DRIVERS_2026.map((d) => d.team))];

@@ -17,7 +17,7 @@ TEAM_COLORS: dict[str, str] = {
     "Williams": "#64C4FF",
     "RB": "#6692FF",
     "Haas": "#B6BABD",
-    "Kick Sauber": "#52E252",
+    "Audi": "#C0C0C0",
     "Cadillac": "#B40000",
 }
 
@@ -25,28 +25,39 @@ TEAM_COLORS: dict[str, str] = {
 # 2026 driver roster  {driver_code: {name, team, number}}
 # ---------------------------------------------------------------------------
 DRIVERS_2026: dict[str, dict] = {
+    # Red Bull Racing
     "VER": {"name": "Max Verstappen",     "team": "Red Bull Racing", "number": 1},
-    "LAW": {"name": "Liam Lawson",        "team": "Red Bull Racing", "number": 30},
+    "HAD": {"name": "Isack Hadjar",       "team": "Red Bull Racing", "number": 6},
+    # Ferrari
     "LEC": {"name": "Charles Leclerc",    "team": "Ferrari",         "number": 16},
     "HAM": {"name": "Lewis Hamilton",     "team": "Ferrari",         "number": 44},
+    # McLaren
     "NOR": {"name": "Lando Norris",       "team": "McLaren",         "number": 4},
     "PIA": {"name": "Oscar Piastri",      "team": "McLaren",         "number": 81},
+    # Mercedes
     "RUS": {"name": "George Russell",     "team": "Mercedes",        "number": 63},
     "ANT": {"name": "Kimi Antonelli",     "team": "Mercedes",        "number": 12},
+    # Aston Martin
     "ALO": {"name": "Fernando Alonso",    "team": "Aston Martin",    "number": 14},
     "STR": {"name": "Lance Stroll",       "team": "Aston Martin",    "number": 18},
+    # Alpine
     "GAS": {"name": "Pierre Gasly",       "team": "Alpine",          "number": 10},
-    "DOO": {"name": "Jack Doohan",        "team": "Alpine",          "number": 7},
+    "COL": {"name": "Franco Colapinto",   "team": "Alpine",          "number": 43},
+    # Williams
     "ALB": {"name": "Alexander Albon",    "team": "Williams",        "number": 23},
     "SAI": {"name": "Carlos Sainz",       "team": "Williams",        "number": 55},
-    "TSU": {"name": "Yuki Tsunoda",       "team": "RB",              "number": 22},
-    "HAD": {"name": "Isack Hadjar",       "team": "RB",              "number": 6},
-    "HUL": {"name": "Nico Hulkenberg",    "team": "Haas",            "number": 27},
+    # RB (junior Red Bull team)
+    "LAW": {"name": "Liam Lawson",        "team": "RB",              "number": 30},
+    "LIN": {"name": "Arvid Lindblad",     "team": "RB",              "number": 2},
+    # Audi (formerly Kick Sauber)
+    "HUL": {"name": "Nico Hulkenberg",    "team": "Audi",            "number": 27},
+    "BOR": {"name": "Gabriel Bortoleto",  "team": "Audi",            "number": 5},
+    # Haas
+    "OCO": {"name": "Esteban Ocon",       "team": "Haas",            "number": 31},
     "BEA": {"name": "Oliver Bearman",     "team": "Haas",            "number": 87},
-    "BOT": {"name": "Valtteri Bottas",    "team": "Kick Sauber",     "number": 77},
-    "BOR": {"name": "Gabriel Bortoleto",  "team": "Kick Sauber",     "number": 5},
-    "HUL2": {"name": "Colton Herta",      "team": "Cadillac",        "number": 99},
-    "FIT": {"name": "Felipe Drugovich",   "team": "Cadillac",        "number": 25},
+    # Cadillac
+    "PER": {"name": "Sergio Perez",       "team": "Cadillac",        "number": 11},
+    "BOT": {"name": "Valtteri Bottas",    "team": "Cadillac",        "number": 77},
 }
 
 # Map driver_code → team color

@@ -1,5 +1,23 @@
 {
-  "results": [],
-  "season_winner_accuracy": null,
-  "season_podium_accuracy": null
+  "results": [
+    {
+      "round": 1,
+      "race": "Australian Grand Prix",
+      "circuit": "Albert Park Grand Prix Circuit",
+      "race_date": "2026-03-08",
+      "predicted_winner": "N/A",
+      "actual_winner": "RUS",
+      "correct_win": false,
+      "predicted_podium": [],
+      "actual_podium": [
+        "RUS",
+        "ANT",
+        "LEC"
+      ],
+      "podium_hits": 0,
+      "updated_at": "2026-03-15T06:51:24.340480+00:00"
+    }
+  ],
+  "season_winner_accuracy": 0.0,
+  "season_podium_accuracy": 0.0
 }
