@@ -10,7 +10,7 @@ const DATA_SOURCES = [
   {
     name: "Jolpica / Ergast",
     url: "api.jolpi.ca",
-    desc: "Historical race results, qualifying positions, driver standings, and constructor standings from 2023–2025. Core training data source.",
+    desc: "Historical race results, qualifying positions, driver standings, and constructor standings from 2023 onwards. Used for both training and 2026 race result ingestion.",
     tag: "Historical",
   },
   {
@@ -208,7 +208,7 @@ export default async function ModelPage() {
         <p className="font-inter text-xs text-muted mb-4 leading-relaxed">
           Each row in the training dataset represents one driver in one race. 15 features are computed per driver.
           Features with no historical baseline fall back to field averages.
-          Three features that were tested and added no predictive value (circuit chaos rate, teammate finish gap, new-team flag) were removed.
+          Two features that were tested and added no predictive value (circuit chaos rate, teammate finish gap) were removed.
         </p>
         <div className="space-y-1">
           {FEATURES.map((feat) => (
