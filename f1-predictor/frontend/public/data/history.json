@@ -22,6 +22,29 @@
         { "driver_code": "LEC", "driver_name": "Charles Leclerc", "team": "Ferrari", "team_color": "#E8002D" }
       ],
       "updated_at": "2026-03-15T06:51:24.340480+00:00"
+    },
+    {
+      "round": 2,
+      "race": "Chinese Grand Prix",
+      "circuit": "Shanghai International Circuit",
+      "race_date": "2026-03-15",
+      "predicted_winner": "ANT",
+      "actual_winner": "ANT",
+      "correct_win": true,
+      "predicted_podium": ["ANT", "RUS", "VER"],
+      "actual_podium": ["ANT", "RUS", "HAM"],
+      "podium_hits": 2,
+      "predicted_top3": [
+        { "driver_code": "ANT", "driver_name": "Kimi Antonelli", "team": "Mercedes", "team_color": "#27F4D2", "win_probability": 0.2908, "podium_probability": 0.5678 },
+        { "driver_code": "RUS", "driver_name": "George Russell", "team": "Mercedes", "team_color": "#27F4D2", "win_probability": 0.1213, "podium_probability": 0.5833 },
+        { "driver_code": "VER", "driver_name": "Max Verstappen", "team": "Red Bull Racing", "team_color": "#3671C6", "win_probability": 0.0736, "podium_probability": 0.4154 }
+      ],
+      "actual_top3": [
+        { "driver_code": "ANT", "driver_name": "Kimi Antonelli", "team": "Mercedes", "team_color": "#27F4D2" },
+        { "driver_code": "RUS", "driver_name": "George Russell", "team": "Mercedes", "team_color": "#27F4D2" },
+        { "driver_code": "HAM", "driver_name": "Lewis Hamilton", "team": "Ferrari", "team_color": "#E8002D" }
+      ],
+      "updated_at": "2026-03-15T14:00:00.000000+00:00"
     }
   ],
   "season_winner_accuracy": 1.0,
