@@ -5,10 +5,7 @@ import { CheckCircle2, XCircle, ArrowLeft } from "lucide-react";
 import type { PodiumEntry } from "@/lib/types";
 
 export async function generateStaticParams() {
-  const [history, calendar] = await Promise.all([
-    getHistoryStatic(),
-    getCalendarStatic(),
-  ]);
+  const calendar = await getCalendarStatic();
   const season = calendar?.season ?? 2026;
   const rounds = calendar?.races.map((r) => r.round) ?? [];
   return rounds.map((round) => ({
@@ -22,9 +19,10 @@ const POSITIONS = ["P1", "P2", "P3"];
 export default async function RaceDetailPage({
   params,
 }: {
-  params: { season: string; round: string };
+  params: Promise<{ season: string; round: string }>;
 }) {
-  const roundNum = parseInt(params.round, 10);
+  const { round: roundParam } = await params;
+  const roundNum = parseInt(roundParam, 10);
   const [history, calendarData] = await Promise.all([
     getHistoryStatic(),
     getCalendarStatic(),
