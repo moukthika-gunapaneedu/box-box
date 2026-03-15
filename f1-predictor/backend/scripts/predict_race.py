@@ -197,7 +197,7 @@ def predict(round_num: int | None = None) -> dict:
 
     # Sort by win probability — P1 = most likely to win.
     # Podium % is normalized to sum to 3.0 so it's consistent with this ranking.
-    results.sort(key=lambda x: x["win_probability"], reverse=True)
+    results.sort(key=lambda x: (x["podium_probability"], x["win_probability"]), reverse=True)
     for i, r in enumerate(results):
         r["position"] = i + 1
 

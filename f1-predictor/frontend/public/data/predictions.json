@@ -3,27 +3,11 @@
   "round": 2,
   "circuit": "Shanghai International Circuit",
   "circuit_type": "technical",
-  "predicted_at": "2026-03-15T08:04:53.015639+00:00",
+  "predicted_at": "2026-03-15T08:12:30.975924+00:00",
   "data_freshness": "post-qualifying",
   "model_source": "ml_ensemble",
   "model_accuracy_ytd": 1.0,
   "predictions": [
-    {
-      "driver_code": "ANT",
-      "driver_name": "Kimi Antonelli",
-      "team": "Mercedes",
-      "team_color": "#27F4D2",
-      "driver_number": 12,
-      "win_probability": 0.2691,
-      "podium_probability": 0.5783,
-      "predicted_finish": 2.0,
-      "confidence": "high",
-      "key_factors": [
-        "Starting from pole"
-      ],
-      "quali_position": 1,
-      "position": 1
-    },
     {
       "driver_code": "RUS",
       "driver_name": "George Russell",
@@ -39,23 +23,23 @@
         "Good recent form"
       ],
       "quali_position": 2,
-      "position": 2
+      "position": 1
     },
     {
-      "driver_code": "VER",
-      "driver_name": "Max Verstappen",
-      "team": "Red Bull Racing",
-      "team_color": "#3671C6",
-      "driver_number": 1,
-      "win_probability": 0.0787,
-      "podium_probability": 0.364,
-      "predicted_finish": 5.0,
-      "confidence": "low",
+      "driver_code": "ANT",
+      "driver_name": "Kimi Antonelli",
+      "team": "Mercedes",
+      "team_color": "#27F4D2",
+      "driver_number": 12,
+      "win_probability": 0.2691,
+      "podium_probability": 0.5783,
+      "predicted_finish": 2.0,
+      "confidence": "high",
       "key_factors": [
-        "Excellent recent form"
+        "Starting from pole"
       ],
-      "quali_position": 8,
-      "position": 3
+      "quali_position": 1,
+      "position": 2
     },
     {
       "driver_code": "LEC",
@@ -71,39 +55,23 @@
         "P4 grid position"
       ],
       "quali_position": 4,
-      "position": 4
+      "position": 3
     },
     {
-      "driver_code": "PER",
-      "driver_name": "Sergio Perez",
-      "team": "Cadillac",
-      "team_color": "#B40000",
-      "driver_number": 11,
-      "win_probability": 0.049,
-      "podium_probability": 0.0616,
-      "predicted_finish": 9.0,
+      "driver_code": "VER",
+      "driver_name": "Max Verstappen",
+      "team": "Red Bull Racing",
+      "team_color": "#3671C6",
+      "driver_number": 1,
+      "win_probability": 0.0787,
+      "podium_probability": 0.364,
+      "predicted_finish": 5.0,
       "confidence": "low",
       "key_factors": [
-        "High DNF risk"
+        "Excellent recent form"
       ],
-      "quali_position": 22,
-      "position": 5
-    },
-    {
-      "driver_code": "NOR",
-      "driver_name": "Lando Norris",
-      "team": "McLaren",
-      "team_color": "#FF8000",
-      "driver_number": 4,
-      "win_probability": 0.0366,
-      "podium_probability": 0.0956,
-      "predicted_finish": 4.0,
-      "confidence": "medium",
-      "key_factors": [
-        "P6 grid position"
-      ],
-      "quali_position": 6,
-      "position": 6
+      "quali_position": 8,
+      "position": 4
     },
     {
       "driver_code": "HAM",
@@ -119,7 +87,7 @@
         "P3 on grid"
       ],
       "quali_position": 3,
-      "position": 7
+      "position": 5
     },
     {
       "driver_code": "PIA",
@@ -135,6 +103,38 @@
         "P5 grid position"
       ],
       "quali_position": 5,
+      "position": 6
+    },
+    {
+      "driver_code": "NOR",
+      "driver_name": "Lando Norris",
+      "team": "McLaren",
+      "team_color": "#FF8000",
+      "driver_number": 4,
+      "win_probability": 0.0366,
+      "podium_probability": 0.0956,
+      "predicted_finish": 4.0,
+      "confidence": "medium",
+      "key_factors": [
+        "P6 grid position"
+      ],
+      "quali_position": 6,
+      "position": 7
+    },
+    {
+      "driver_code": "PER",
+      "driver_name": "Sergio Perez",
+      "team": "Cadillac",
+      "team_color": "#B40000",
+      "driver_number": 11,
+      "win_probability": 0.049,
+      "podium_probability": 0.0616,
+      "predicted_finish": 9.0,
+      "confidence": "low",
+      "key_factors": [
+        "High DNF risk"
+      ],
+      "quali_position": 22,
       "position": 8
     },
     {
