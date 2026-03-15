@@ -45,10 +45,14 @@ export default async function DriversPage() {
     getHistoryStatic(),
   ]);
 
-  // Build win stats from history
+  // Build win + podium stats from history
   const winStats: Record<string, number> = {};
+  const podiumStats: Record<string, number> = {};
   history?.results.forEach((r) => {
     winStats[r.actual_winner] = (winStats[r.actual_winner] ?? 0) + 1;
+    r.actual_podium?.forEach((code) => {
+      podiumStats[code] = (podiumStats[code] ?? 0) + 1;
+    });
   });
 
   // Current prediction win probabilities
@@ -94,13 +98,20 @@ export default async function DriversPage() {
                     </p>
                     <p className="font-inter text-xs text-muted">{driver.code}</p>
                   </div>
-                  <div className="text-right shrink-0">
-                    {winStats[driver.code] ? (
+                  <div className="text-right shrink-0 flex gap-4">
+                    {winStats[driver.code] != null && (
                       <div>
-                        <p className="font-barlow font-900 text-xl text-platinum">{winStats[driver.code]}</p>
-                        <p className="font-inter text-[10px] text-muted">2026 wins</p>
+                        <p className="font-barlow font-900 text-xl text-platinum">{winStats[driver.code] ?? 0}</p>
+                        <p className="font-inter text-[10px] text-muted">wins</p>
                       </div>
-                    ) : winProbs[driver.code] ? (
+                    )}
+                    {podiumStats[driver.code] != null && (
+                      <div>
+                        <p className="font-barlow font-900 text-xl" style={{ color }}>{podiumStats[driver.code] ?? 0}</p>
+                        <p className="font-inter text-[10px] text-muted">podiums</p>
+                      </div>
+                    )}
+                    {!winStats[driver.code] && !podiumStats[driver.code] && winProbs[driver.code] ? (
                       <div>
                         <p className="font-barlow font-700 text-sm" style={{ color }}>
                           {(winProbs[driver.code] * 100).toFixed(1)}%

@@ -45,7 +45,7 @@ export default function PredictionGrid({ predictions }: PredictionGridProps) {
         animate="show"
         className="space-y-1"
       >
-        {predictions.slice(0, 10).map((p, i) => {
+        {predictions.map((p, i) => {
           const posColor = POSITION_COLORS[p.position];
           return (
             <motion.div

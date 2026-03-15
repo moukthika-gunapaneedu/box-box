@@ -72,3 +72,9 @@ export interface CalendarData {
   season: number;
   races: CalendarRace[];
 }
+
+export interface ModelMetrics {
+  winner_accuracy: number;
+  podium_accuracy: number;
+  total_races_evaluated: number;
+}

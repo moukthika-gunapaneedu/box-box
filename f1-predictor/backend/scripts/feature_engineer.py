@@ -22,7 +22,7 @@ from utils import season_weight, DRIVERS_2026, OVERTAKE_INDEX, get_circuit_type
 DATA_DIR = Path(__file__).parent.parent / "data"
 DATA_DIR.mkdir(exist_ok=True)
 
-HISTORY_SEASONS = [2023, 2024, 2025]  # 2022 dropped: first year of ground-effect regs, teaches wrong patterns
+HISTORY_SEASONS = [2023, 2024, 2025, 2026]  # 2026 included: new reg era, but real ground truth outweighs noise
 
 
 # ---------------------------------------------------------------------------
@@ -34,35 +34,40 @@ def build_training_dataset(seasons: list[int] = HISTORY_SEASONS) -> pd.DataFrame
     Build full feature + label DataFrame across multiple seasons.
     Label = finishing_position (and derived: win, podium).
     """
-    all_rows: list[pd.DataFrame] = []
+    from collect_data import get_race_calendar
 
+    # Load ALL results across all seasons first so each race can use
+    # cross-season form data (e.g. 2024 R1 sees full 2023 history).
+    print("Loading all historical results...")
+    all_results_frames: list[pd.DataFrame] = []
+    calendars: dict[int, list[dict]] = {}
     for year in seasons:
-        print(f"Building features for {year}...")
         try:
-            from collect_data import get_race_calendar
-            calendar = get_race_calendar(year)
+            cal = get_race_calendar(year)
         except Exception:
-            calendar = []
-
-        all_results_year: list[pd.DataFrame] = []
-        for race in calendar:
-            rn = race["round"]
+            cal = []
+        calendars[year] = cal
+        for race in cal:
             try:
-                r = get_race_results(year, rn)
+                r = get_race_results(year, race["round"])
                 if not r.empty:
-                    all_results_year.append(r)
+                    r["circuit"] = race.get("circuit", "")
+                    all_results_frames.append(r)
             except Exception:
                 pass
 
-        if not all_results_year:
-            continue
+    if not all_results_frames:
+        return pd.DataFrame()
 
-        results_year = pd.concat(all_results_year, ignore_index=True)
+    all_results = pd.concat(all_results_frames, ignore_index=True)
 
-        for race in calendar:
+    all_rows: list[pd.DataFrame] = []
+    for year in seasons:
+        print(f"Building features for {year}...")
+        for race in calendars.get(year, []):
             rn = race["round"]
             try:
-                row_df = _build_race_features(year, rn, results_year, race)
+                row_df = _build_race_features(year, rn, all_results, race)
                 if row_df is not None and not row_df.empty:
                     all_rows.append(row_df)
             except Exception as exc:
@@ -186,7 +191,8 @@ def _driver_features(
         if not dq.empty:
             feats["quali_position"] = int(dq.iloc[0]["quali_position"])
         else:
-            feats["quali_position"] = quali_fallback
+            # Qualifying happened but driver not listed → crashed/excluded → last place
+            feats["quali_position"] = int(len(quali_df)) + 1
     else:
         feats["quali_position"] = quali_fallback
 

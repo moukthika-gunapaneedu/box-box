@@ -1,4 +1,5 @@
 import { Database, Cpu, FlaskConical, AlertTriangle, TrendingUp, Zap, XCircle } from "lucide-react";
+import { getMetricsStatic } from "@/lib/data";
 
 export const metadata = {
   title: "How It Works | Box Box",
@@ -108,12 +109,12 @@ const WEIGHT_COLORS: Record<string, string> = {
 
 const LIMITATIONS = [
   {
-    title: "Only 3 seasons of training data",
-    desc: "The model trains on 2023, 2024, and 2025 only. 2022 was dropped because it was the first year of ground-effect regulations and taught incorrect patterns. Three seasons (~70 races, ~1,400 driver-race rows) is a small dataset for ML.",
+    title: "Limited training data",
+    desc: "The model trains on 2023–2026 race results. 2022 was dropped because it was the first year of ground-effect regulations and taught incorrect patterns. Even with 4 seasons (~1,400 driver-race rows), this is a small dataset for ML — confidence intervals are wide.",
   },
   {
     title: "2026 is an entirely new formula",
-    desc: "New aerodynamic and power unit regulations mean 2026 cars behave differently from anything in training. Pre-2026 data is useful but not a perfect proxy. Predictions carry higher uncertainty until the 2026 competitive order becomes clear.",
+    desc: "New aerodynamic and power unit regulations mean 2026 cars behave differently from anything in the 2023–2025 training data. The model now incorporates 2026 results as they arrive (weighted 5× more than 2025), but the first few races carry high uncertainty until the new competitive order stabilises.",
   },
   {
     title: "New driver and team combinations",
@@ -133,7 +134,13 @@ const LIMITATIONS = [
   },
 ];
 
-export default function ModelPage() {
+export default async function ModelPage() {
+  const metrics = await getMetricsStatic();
+
+  const winnerAccStr = metrics ? `${(metrics.winner_accuracy * 100).toFixed(1)}%` : "—";
+  const podiumAccStr = metrics ? `${(metrics.podium_accuracy * 100).toFixed(1)}%` : "—";
+  const racesEval = metrics?.total_races_evaluated ?? 0;
+
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       {/* Header */}
@@ -153,12 +160,12 @@ export default function ModelPage() {
         <AlertTriangle size={16} className="text-amber-400 shrink-0 mt-0.5" />
         <div>
           <p className="font-barlow font-700 text-sm text-amber-400 uppercase tracking-wide mb-1">
-            2026 Season — Early Stage
+            2026 Season — New Formula
           </p>
           <p className="font-inter text-xs text-muted leading-relaxed">
             2026 introduces new aerodynamic and power unit regulations — essentially a new formula.
-            The model has no 2026 race results to learn from yet. Early-season predictions are based entirely on
-            2023–2025 patterns projected onto a new grid. Accuracy will improve as 2026 race data accumulates.
+            The model now trains on 2026 race results as they come in, weighted 5× more heavily than 2025 data.
+            Early-season predictions carry higher uncertainty until the new competitive order becomes clear.
           </p>
         </div>
       </div>
@@ -273,8 +280,8 @@ export default function ModelPage() {
           <p className="font-inter text-xs text-muted leading-relaxed">
             <span className="text-platinum font-500">Training: </span>
             TimeSeriesSplit cross-validation (4 folds) ensures the model is never trained on future race data — no leakage.
-            Sample weights favour recent seasons: 2025 is weighted 3× more than 2023.
-            Trained on ~1,400 driver-race rows across 2023–2025. Models are retrained whenever new race results are added.
+            Season weights: 2026 races are weighted 5× more than 2025, which is weighted 2× more than 2024.
+            Trained on ~1,400 driver-race rows across 2023–2026. Models are retrained as 2026 results accumulate.
           </p>
         </div>
       </section>
@@ -301,13 +308,13 @@ export default function ModelPage() {
             },
             {
               label: "CV winner accuracy",
-              value: "51.8%",
-              desc: "Measured via TimeSeriesSplit on 56 historical races. The model correctly picks the race winner in roughly 1 in 2 races — 10× better than random.",
+              value: winnerAccStr,
+              desc: `Measured via TimeSeriesSplit on ${racesEval} historical races. The model correctly picks the race winner in roughly 1 in 2 races — ~10× better than random.`,
             },
             {
               label: "CV podium accuracy",
-              value: "64.3%",
-              desc: "Average overlap between predicted top-3 and actual top-3. Measured across the same 56 races.",
+              value: podiumAccStr,
+              desc: `Average overlap between predicted top-3 and actual top-3. Measured across the same ${racesEval} races.`,
             },
           ].map((row) => (
             <div key={row.label} className="flex items-baseline justify-between border-b border-border pb-4 last:border-0 last:pb-0">
@@ -320,7 +327,7 @@ export default function ModelPage() {
           ))}
         </div>
         <p className="font-inter text-xs text-muted pl-1">
-          These figures are from cross-validation on 2023–2025 data and will differ from live 2026 performance.
+          CV figures are from cross-validation on 2023–2025 data. Live 2026 accuracy is tracked on the home page as each race result comes in.
         </p>
       </section>
 

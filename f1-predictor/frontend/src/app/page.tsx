@@ -50,7 +50,7 @@ export default async function Home() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Data freshness + accuracy */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-10">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
           <div className="lg:col-span-2">
             <DataFreshnessBadge
               freshness={data.data_freshness}
@@ -72,11 +72,35 @@ export default async function Home() {
           </div>
         </div>
 
+        {/* Season stats strip */}
+        {history && history.results.length > 0 && (
+          <div className="grid grid-cols-3 gap-3 mb-10">
+            <div className="glass-card p-3 text-center">
+              <p className="font-barlow font-900 text-2xl text-platinum tabular-nums">
+                {history.results.length}
+              </p>
+              <p className="font-barlow font-700 text-xs text-muted uppercase tracking-widest mt-0.5">Races Done</p>
+            </div>
+            <div className="glass-card p-3 text-center">
+              <p className="font-barlow font-900 text-2xl text-platinum tabular-nums">
+                {history.results.filter((r) => r.correct_win).length}/{history.results.length}
+              </p>
+              <p className="font-barlow font-700 text-xs text-muted uppercase tracking-widest mt-0.5">Winners Called</p>
+            </div>
+            <div className="glass-card p-3 text-center">
+              <p className="font-barlow font-900 text-2xl text-platinum tabular-nums">
+                {history.results.reduce((s, r) => s + r.podium_hits, 0)}/{history.results.length * 3}
+              </p>
+              <p className="font-barlow font-700 text-xs text-muted uppercase tracking-widest mt-0.5">Podium Hits</p>
+            </div>
+          </div>
+        )}
+
         {/* Full prediction grid */}
         <section className="mb-16">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-barlow font-800 text-2xl uppercase tracking-wide text-platinum">
-              Top 10 Predictions
+              Full Grid Predictions
             </h2>
             <span className="font-inter text-xs text-muted">
               {data.predictions.length} drivers · {data.circuit}

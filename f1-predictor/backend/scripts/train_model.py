@@ -139,8 +139,13 @@ def train() -> dict:
     joblib.dump(xgb_pos_model, MODELS_DIR / "xgb_position.pkl")
     print("Models saved to models/")
 
-    # Save metrics
-    (MODELS_DIR / "metrics.json").write_text(json.dumps(metrics, indent=2))
+    # Save metrics — backend and frontend both get a copy
+    metrics_json = json.dumps(metrics, indent=2)
+    (MODELS_DIR / "metrics.json").write_text(metrics_json)
+    frontend_data = Path(__file__).parent.parent.parent / "frontend" / "public" / "data"
+    frontend_data.mkdir(parents=True, exist_ok=True)
+    (frontend_data / "metrics.json").write_text(metrics_json)
+    print(f"Metrics written to models/ and frontend/public/data/")
     return metrics
 
 

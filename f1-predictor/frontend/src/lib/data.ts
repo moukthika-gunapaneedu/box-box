@@ -1,4 +1,4 @@
-import type { RacePrediction, HistoryData, CalendarData } from "./types";
+import type { RacePrediction, HistoryData, CalendarData, ModelMetrics } from "./types";
 
 export async function getPredictions(): Promise<RacePrediction | null> {
   try {
@@ -50,6 +50,18 @@ export async function getCalendarStatic(): Promise<CalendarData | null> {
     const fs = await import("fs/promises");
     const path = await import("path");
     const filePath = path.join(process.cwd(), "public", "data", "calendar.json");
+    const raw = await fs.readFile(filePath, "utf-8");
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
+export async function getMetricsStatic(): Promise<ModelMetrics | null> {
+  try {
+    const fs = await import("fs/promises");
+    const path = await import("path");
+    const filePath = path.join(process.cwd(), "public", "data", "metrics.json");
     const raw = await fs.readFile(filePath, "utf-8");
     return JSON.parse(raw);
   } catch {
