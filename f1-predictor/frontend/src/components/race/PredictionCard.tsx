@@ -31,7 +31,7 @@ export default function PredictionCard({ prediction: p, rank, delay = 0 }: Predi
 
   return (
     <div
-      className="relative glass-card transition-all duration-300 hover:border-opacity-50 group"
+      className="relative glass-card transition-all duration-300 hover:border-opacity-50 group h-full flex flex-col"
       style={{
         borderLeftColor: rankStyle?.border ?? p.team_color,
         borderLeftWidth: 3,
@@ -43,7 +43,7 @@ export default function PredictionCard({ prediction: p, rank, delay = 0 }: Predi
         style={{ background: `radial-gradient(ellipse at left, ${p.team_color}08, transparent 70%)` }}
       />
 
-      <div className="relative p-4">
+      <div className="relative p-4 flex flex-col flex-1">
         {/* Header row */}
         <div className="flex items-start justify-between mb-3">
           <div>
@@ -70,22 +70,26 @@ export default function PredictionCard({ prediction: p, rank, delay = 0 }: Predi
           </div>
         </div>
 
-        {/* Win probability bar */}
-        <div className="mb-3">
+        {/* Win probability */}
+        <div className="mb-3 flex-1">
           <Tooltip text="Likelihood this driver wins the race. All 20 drivers combined = 100%." position="top">
-            <p className="font-barlow font-600 text-xs text-muted uppercase tracking-widest mb-1.5 cursor-default">
-              Win Probability
-            </p>
+            <div className="flex items-baseline justify-between mb-1.5 cursor-default">
+              <p className="font-barlow font-600 text-xs text-muted uppercase tracking-widest">Win Probability</p>
+              <span className="font-barlow font-800 text-base tabular-nums" style={{ color: p.team_color }}>
+                {Math.round(p.win_probability * 100)}%
+              </span>
+            </div>
           </Tooltip>
           <WinProbabilityBar
             probability={p.win_probability}
             teamColor={p.team_color}
             delay={delay + 0.2}
+            showLabel={false}
           />
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between mb-2">
           <Tooltip text={CONFIDENCE_TOOLTIPS[p.confidence]} position="bottom">
             <Pill
               label={p.confidence.toUpperCase()}
@@ -99,16 +103,12 @@ export default function PredictionCard({ prediction: p, rank, delay = 0 }: Predi
           </Tooltip>
         </div>
 
-        {/* Key factors */}
-        {p.key_factors.length > 0 && (
-          <div className="mt-2 pt-2 border-t border-border">
-            {p.key_factors.slice(0, 2).map((factor, i) => (
-              <p key={i} className="font-inter text-[11px] text-muted italic">
-                · {factor}
-              </p>
-            ))}
-          </div>
-        )}
+        {/* Key factor — always exactly one line to keep cards the same height */}
+        <div className="pt-2 border-t border-border">
+          <p className="font-inter text-[11px] text-muted italic">
+            · {p.key_factors[0] ?? "No standout factors"}
+          </p>
+        </div>
       </div>
     </div>
   );

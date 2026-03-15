@@ -104,13 +104,14 @@ export default function HeroBanner({ data, nextRaceDate, nextRaceName }: HeroBan
         </motion.div>
 
         {/* Top 3 prediction cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-stretch">
           {top3.map((prediction, i) => (
             <motion.div
               key={prediction.driver_code}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.3 + i * 0.1 }}
+              className="h-full"
             >
               <PredictionCard prediction={prediction} rank={i + 1} delay={0.3 + i * 0.1} />
             </motion.div>

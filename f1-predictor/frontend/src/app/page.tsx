@@ -100,7 +100,7 @@ export default async function Home() {
         <section className="mb-16">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-barlow font-800 text-2xl uppercase tracking-wide text-platinum">
-              Full Grid Predictions
+              Top 10 Predictions
             </h2>
             <span className="font-inter text-xs text-muted">
               {data.predictions.length} drivers · {data.circuit}

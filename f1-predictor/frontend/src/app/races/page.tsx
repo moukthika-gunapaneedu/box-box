@@ -64,7 +64,7 @@ export default async function RacesPage() {
                   <p className="font-barlow font-700 text-base text-platinum uppercase tracking-tight group-hover:text-f1-red transition-colors">
                     {race.name}
                   </p>
-                  {isToday && (
+                  {isToday && !isCompleted && (
                     <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-sm bg-f1-red/10 border border-f1-red/30">
                       <Radio size={8} className="text-f1-red animate-pulse" />
                       <span className="font-barlow font-700 text-[10px] text-f1-red uppercase tracking-widest">Live</span>
