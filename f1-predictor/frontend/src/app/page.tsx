@@ -5,7 +5,7 @@ import PredictionGrid from "@/components/race/PredictionGrid";
 import DataFreshnessBadge from "@/components/race/DataFreshnessBadge";
 import AccuracyChart from "@/components/charts/AccuracyChart";
 import { HeroBannerSkeleton, PredictionGridSkeleton } from "@/components/ui/Skeleton";
-import { BarChart3, Database, Cpu, Link } from "lucide-react";
+import { BarChart3, Database, Cpu } from "lucide-react";
 import NextLink from "next/link";
 
 export const revalidate = 300; // revalidate every 5 minutes
@@ -49,52 +49,38 @@ export default async function Home() {
       </Suspense>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Data freshness + accuracy */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
-          <div className="lg:col-span-2">
-            <DataFreshnessBadge
-              freshness={data.data_freshness}
-              predictedAt={data.predicted_at}
-            />
-          </div>
-          <div className="glass-card p-3 flex items-center justify-between">
-            <div>
-              <p className="font-barlow font-700 text-xs text-muted uppercase tracking-widest mb-1">
-                2026 Winner Accuracy
-              </p>
-              <p className="font-barlow font-900 text-2xl text-platinum tabular-nums">
-                {history?.season_winner_accuracy != null
-                  ? `${Math.round(history.season_winner_accuracy * 100)}%`
-                  : "—"}
-              </p>
-            </div>
-            <BarChart3 size={28} className="text-muted" />
-          </div>
+        {/* Freshness badge */}
+        <div className="mb-3">
+          <DataFreshnessBadge
+            freshness={data.data_freshness}
+            predictedAt={data.predicted_at}
+          />
         </div>
 
-        {/* Season stats strip */}
-        {history && history.results.length > 0 && (
-          <div className="grid grid-cols-3 gap-3 mb-10">
-            <div className="glass-card p-3 text-center">
-              <p className="font-barlow font-900 text-2xl text-platinum tabular-nums">
-                {history.results.length}
-              </p>
-              <p className="font-barlow font-700 text-xs text-muted uppercase tracking-widest mt-0.5">Races Done</p>
+        {/* Season stats — single card, shown only once races have been run */}
+        {history && history.results.length > 0 && (() => {
+          const races = history.results.length;
+          const wins = history.results.filter((r) => r.correct_win).length;
+          const podiumHits = history.results.reduce((s, r) => s + r.podium_hits, 0);
+          const winPct = Math.round((wins / races) * 100);
+          const podiumPct = Math.round((podiumHits / (races * 3)) * 100);
+          const stats = [
+            { label: "Races Done", value: `${races}`, sub: `of ${calendar?.races.length ?? "—"}` },
+            { label: "Winner Accuracy", value: `${winPct}%`, sub: `${wins} of ${races} correct` },
+            { label: "Podium Accuracy", value: `${podiumPct}%`, sub: `${podiumHits} of ${races * 3} slots` },
+          ];
+          return (
+            <div className="glass-card flex divide-x divide-border mb-10">
+              {stats.map(({ label, value, sub }) => (
+                <div key={label} className="flex-1 px-5 py-4 text-center">
+                  <p className="font-barlow font-900 text-2xl text-platinum tabular-nums">{value}</p>
+                  <p className="font-barlow font-700 text-xs text-muted uppercase tracking-widest mt-0.5">{label}</p>
+                  <p className="font-inter text-[10px] text-muted/60 mt-0.5">{sub}</p>
+                </div>
+              ))}
             </div>
-            <div className="glass-card p-3 text-center">
-              <p className="font-barlow font-900 text-2xl text-platinum tabular-nums">
-                {history.results.filter((r) => r.correct_win).length}/{history.results.length}
-              </p>
-              <p className="font-barlow font-700 text-xs text-muted uppercase tracking-widest mt-0.5">Winners Called</p>
-            </div>
-            <div className="glass-card p-3 text-center">
-              <p className="font-barlow font-900 text-2xl text-platinum tabular-nums">
-                {history.results.reduce((s, r) => s + r.podium_hits, 0)}/{history.results.length * 3}
-              </p>
-              <p className="font-barlow font-700 text-xs text-muted uppercase tracking-widest mt-0.5">Podium Hits</p>
-            </div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* Full prediction grid */}
         <section className="mb-16">
@@ -151,7 +137,7 @@ export default async function Home() {
                 {
                   icon: Cpu,
                   title: "ML Ensemble",
-                  desc: "XGBoost + LightGBM trained on 2023–2025 races. Models retrained as 2026 results come in.",
+                  desc: "XGBoost + LightGBM trained on 2023–2026 races. Retrained as each 2026 result comes in.",
                 },
                 {
                   icon: BarChart3,
