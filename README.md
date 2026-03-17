@@ -2,7 +2,7 @@
 
 ![box-box](./box-box.jpg)
 
-> *"Box, box."* - Toto Wolff, probably.
+> *"Box, box."* - Bono, probably.
 
 An AI-powered Formula 1 race prediction platform for the 2026 season. Box-box combines real-time qualifying data, practice pace, historical performance, and machine learning to predict race winners, podium finishes, and driver positions - before lights out.
 
