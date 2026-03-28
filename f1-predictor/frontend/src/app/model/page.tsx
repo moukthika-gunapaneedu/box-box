@@ -110,7 +110,7 @@ const WEIGHT_COLORS: Record<string, string> = {
 const LIMITATIONS = [
   {
     title: "Limited training data",
-    desc: "The model trains on 2023–2026 race results. 2022 was dropped because it was the first year of ground-effect regulations and taught incorrect patterns. Even with 4 seasons (~1,400 driver-race rows), this is a small dataset for ML — confidence intervals are wide.",
+    desc: "The model trains on 2022–2026 race results (~1,800 driver-race rows across 4+ seasons). This is a small dataset for ML — confidence intervals are wide, and the model is most reliable when qualifying position already tells a clear story.",
   },
   {
     title: "2026 is an entirely new formula",
@@ -150,7 +150,7 @@ export default async function ModelPage() {
           How It Works
         </h1>
         <p className="font-inter text-sm text-muted leading-relaxed max-w-2xl">
-          Box Box uses a machine learning ensemble trained on F1 race data from 2023 to present.
+          Box Box uses a machine learning ensemble trained on F1 race data from 2022 to present.
           Predictions are regenerated after qualifying each Saturday using the actual grid positions.
         </p>
       </div>
@@ -206,9 +206,9 @@ export default async function ModelPage() {
           <h2 className="font-barlow font-800 text-xl uppercase tracking-wide text-platinum">Feature Engineering</h2>
         </div>
         <p className="font-inter text-xs text-muted mb-4 leading-relaxed">
-          Each row in the training dataset represents one driver in one race. 15 features are computed per driver.
+          Each row in the training dataset represents one driver in one race. 9 features are currently computed per driver.
           Features with no historical baseline fall back to field averages.
-          Two features that were tested and added no predictive value (circuit chaos rate, teammate finish gap) were removed.
+          Championship standings will be added as a feature from Round 4 onwards once enough 2026 data exists.
         </p>
         <div className="space-y-1">
           {FEATURES.map((feat) => (
@@ -281,7 +281,7 @@ export default async function ModelPage() {
             <span className="text-platinum font-500">Training: </span>
             TimeSeriesSplit cross-validation (4 folds) ensures the model is never trained on future race data — no leakage.
             Season weights: 2026 races are weighted 5× more than 2025, which is weighted 2× more than 2024.
-            Trained on ~1,400 driver-race rows across 2023–2026. Models are retrained as 2026 results accumulate.
+            Trained on ~1,800 driver-race rows across 2022–2026. Models are retrained as 2026 results accumulate.
           </p>
         </div>
       </section>

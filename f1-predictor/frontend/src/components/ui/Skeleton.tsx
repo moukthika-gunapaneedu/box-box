@@ -13,7 +13,7 @@ export function Skeleton({ className }: SkeletonProps) {
 export function PredictionGridSkeleton() {
   return (
     <div className="space-y-2">
-      {Array.from({ length: 10 }).map((_, i) => (
+      {Array.from({ length: 5 }).map((_, i) => (
         <div key={i} className="flex items-center gap-4 p-4 glass-card">
           <Skeleton className="w-8 h-6" />
           <Skeleton className="w-1 h-10 rounded-full" />
