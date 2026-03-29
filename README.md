@@ -160,4 +160,4 @@ python scripts/update_history.py       # Record actual results + update accuracy
 
 ## Deployment
 
-Push to `main` — GitHub Actions handles the rest. The frontend exports to static HTML/CSS/JS (Next.js static export via `next build`) and is deployed to GitHub Pages automatically via the `deploy.yml` workflow.
+Push to `main` - GitHub Actions handles the rest. The frontend exports to static HTML/CSS/JS (Next.js static export via `next build`) and is deployed to GitHub Pages automatically via the `deploy.yml` workflow.
