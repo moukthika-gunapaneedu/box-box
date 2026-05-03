@@ -26,7 +26,7 @@ export function useCountdown(targetDate: string): CountdownResult {
 
   if (totalSeconds < 0) {
     // Check if race is "live" (within 3 hours after start)
-    const isLive = Math.abs(totalSeconds) < 3 * 3600;
+    const isLive = Math.abs(totalSeconds) < 2 * 3600;
     return { days: 0, hours: 0, minutes: 0, seconds: 0, isLive, isPast: true, totalSeconds };
   }
 
