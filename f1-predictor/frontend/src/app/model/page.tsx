@@ -10,14 +10,20 @@ const DATA_SOURCES = [
   {
     name: "Jolpica / Ergast",
     url: "api.jolpi.ca",
-    desc: "Historical race results, qualifying positions, driver standings, and constructor standings from 2023 onwards. Used for both training and 2026 race result ingestion.",
+    desc: "Historical race results, qualifying positions, sprint race results, driver standings, and constructor standings from 2023 onwards. Used for both training and 2026 race result ingestion.",
     tag: "Historical",
   },
   {
     name: "OpenF1 API",
     url: "openf1.org",
-    desc: "Real-time session data for the current season: practice lap times, qualifying results, race weather (temperature, rainfall). Primary source for 2026 data.",
+    desc: "Real-time session data: practice lap times, sprint fastest laps, live race weather (temperature, rainfall). Used for pace delta features and race-day conditions once the session is live.",
     tag: "Real-time",
+  },
+  {
+    name: "Open-Meteo",
+    url: "open-meteo.com",
+    desc: "Hourly weather forecast for the race location and start time. Used pre-race to estimate track temperature and rain probability when the session hasn't started yet. Track temp is derived from air temp and cloud cover.",
+    tag: "Forecast",
   },
 ];
 
@@ -80,7 +86,7 @@ const FEATURES = [
   {
     name: "Race Weather",
     weight: "Contextual",
-    desc: "Is it raining (0/1) and track temperature at race start, from OpenF1. Changes tyre behaviour and overtaking rates significantly.",
+    desc: "Is it raining (0/1) and track temperature at race start. Source priority: live OpenF1 session → Open-Meteo forecast (air temp + cloud cover estimate) → same-weekend session → default. Changes tyre behaviour and overtaking rates significantly.",
   },
   {
     name: "Team Reliability Score",
@@ -193,7 +199,7 @@ export default async function ModelPage() {
           ))}
         </div>
         <p className="font-inter text-xs text-muted mt-3 pl-1">
-          All API responses are cached locally. Qualifying data refreshes every 48 hours; race results are cached permanently. Calendar and standings refresh every 6 hours.
+          All API responses are cached locally. Qualifying and sprint data refreshes every 48 hours; race results are cached permanently. Calendar and standings refresh every 6 hours. Weather forecasts refresh every 2 hours.
         </p>
       </section>
 
