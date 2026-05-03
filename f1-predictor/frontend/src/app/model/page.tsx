@@ -45,7 +45,7 @@ const FEATURES = [
   {
     name: "Practice Pace Delta",
     weight: "Medium",
-    desc: "Driver's best FP3 (or FP2) lap vs the session fastest, as a percentage. Proxy for race weekend setup and raw pace.",
+    desc: "Driver's best practice lap (FP3 → FP2 → FP1) vs the session fastest, as a percentage. On sprint weekends where no FP2/FP3 exists, sprint race fastest laps are used instead.",
   },
   {
     name: "Circuit Historical Average",
@@ -206,9 +206,8 @@ export default async function ModelPage() {
           <h2 className="font-barlow font-800 text-xl uppercase tracking-wide text-platinum">Feature Engineering</h2>
         </div>
         <p className="font-inter text-xs text-muted mb-4 leading-relaxed">
-          Each row in the training dataset represents one driver in one race. 9 features are currently computed per driver.
+          Each row in the training dataset represents one driver in one race. 18 features are computed per driver.
           Features with no historical baseline fall back to field averages.
-          Championship standings will be added as a feature from Round 4 onwards once enough 2026 data exists.
         </p>
         <div className="space-y-1">
           {FEATURES.map((feat) => (
