@@ -316,23 +316,40 @@ def get_weather_forecast(session_key: int) -> dict:
     }
 
 
-def get_race_weather(year: int, round_num: int) -> dict:
+def get_race_weather(year: int, round_num: int, race_date: str | None = None) -> dict:
     """
     Return aggregated weather conditions for a race session.
     Returns: {'is_raining': 0|1, 'track_temp_celsius': float}
-    Uses first ~10 weather readings to represent race start conditions.
+
+    race_date: ISO date string (YYYY-MM-DD) of the race. When provided, sessions are
+    matched by date proximity rather than round index — avoids miscounting sprint races
+    in 2026 where round_number is None for all sessions.
+
+    If the race session has no weather yet (race hasn't started), falls back to the
+    qualifying session from the same weekend.
     """
     _DEFAULT = {"is_raining": 0, "track_temp_celsius": 30.0}
     try:
         sessions = get_openf1_sessions(year)
-        race_sessions = [s for s in sessions if s.get("session_type") == "Race"]
-        if not race_sessions:
+        if not sessions:
             return _DEFAULT
 
         # Try matching by round_number (works for 2023-2025)
+        race_sessions = [s for s in sessions if s.get("session_type") == "Race"]
         target = [s for s in race_sessions if s.get("round_number") == round_num]
 
-        # Fallback: sort by date and use round index (handles 2026 where round_number=None)
+        # If race_date provided, find the Race session closest to that date.
+        # This is more reliable than round index when round_number=None (2026).
+        # Use string prefix comparison to avoid timezone-aware/naive pd.Timestamp issues.
+        if not target and race_date:
+            race_sessions_sorted = sorted(race_sessions, key=lambda x: x.get("date_start", ""))
+            best = min(race_sessions_sorted, key=lambda s: abs(
+                (pd.Timestamp(s["date_start"][:10]) - pd.Timestamp(race_date[:10])).total_seconds()
+            ), default=None)
+            if best:
+                target = [best]
+
+        # Final fallback: round index (may miscount on sprint weekends)
         if not target:
             race_sessions_sorted = sorted(race_sessions, key=lambda x: x.get("date_start", ""))
             if round_num <= len(race_sessions_sorted):
@@ -341,17 +358,38 @@ def get_race_weather(year: int, round_num: int) -> dict:
         if not target:
             return _DEFAULT
 
-        session_key = target[0]["session_key"]
-        weather = get_openf1_weather(session_key)
-        if not weather:
-            return _DEFAULT
+        def _extract_weather(session_key: int) -> dict | None:
+            try:
+                weather = get_openf1_weather(session_key)
+                if not weather:
+                    return None
+                sample = sorted(weather, key=lambda x: x.get("date", ""))[:10]
+                is_raining = int(any(w.get("rainfall", False) for w in sample))
+                temps = [w["track_temperature"] for w in sample if w.get("track_temperature") is not None]
+                track_temp = float(sum(temps) / len(temps)) if temps else None
+                if track_temp is None:
+                    return None
+                return {"is_raining": is_raining, "track_temp_celsius": track_temp}
+            except Exception:
+                return None
 
-        # Use first 10 readings (race start conditions)
-        sample = sorted(weather, key=lambda x: x.get("date", ""))[:10]
-        is_raining = int(any(w.get("rainfall", False) for w in sample))
-        temps = [w["track_temperature"] for w in sample if w.get("track_temperature") is not None]
-        track_temp = float(sum(temps) / len(temps)) if temps else 30.0
+        # Try race session first
+        result = _extract_weather(target[0]["session_key"])
+        if result:
+            return result
 
-        return {"is_raining": is_raining, "track_temp_celsius": track_temp}
+        # Race hasn't started yet — fall back to qualifying session from the same weekend.
+        # Find the qualifying session closest in date to the race session.
+        if race_date:
+            quali_sessions = [s for s in sessions if s.get("session_type") == "Qualifying"]
+            if quali_sessions:
+                closest_quali = min(quali_sessions, key=lambda s: abs(
+                    (pd.Timestamp(s["date_start"][:10]) - pd.Timestamp(race_date[:10])).total_seconds()
+                ))
+                result = _extract_weather(closest_quali["session_key"])
+                if result:
+                    return result
+
+        return _DEFAULT
     except Exception:
         return _DEFAULT
