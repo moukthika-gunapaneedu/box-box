@@ -20,6 +20,15 @@ const FRESHNESS_LABELS: Record<string, string> = {
   "race-day": "Race Day",
 };
 
+// Simplified circuit outlines keyed by circuit name from predictions.json
+const CIRCUIT_PATHS: Record<string, string> = {
+  "Miami International Autodrome":
+    "M 68,250 L 68,55 C 68,28 105,18 135,36 L 176,43 C 195,38 210,50 210,50 L 300,50 C 335,50 342,80 340,108 L 340,192 C 340,220 322,232 300,238 L 278,244 C 260,250 250,237 248,222 C 246,208 258,202 270,208 C 282,214 284,228 272,236 L 254,242 C 236,248 224,236 222,222 C 220,208 232,202 244,208 C 254,213 256,226 246,234 L 228,240 C 210,246 198,234 196,220 C 194,207 204,200 215,205 C 225,210 226,224 217,230 L 205,236 C 188,244 168,244 148,246 L 112,250 C 92,252 75,252 68,250 Z",
+  // Generic fallback used for circuits without a dedicated path
+  _fallback:
+    "M50 250 C50 250 80 200 120 180 L180 160 C220 140 240 100 280 80 C320 60 360 80 380 120 L380 180 C380 220 340 240 300 240 L200 240 C160 240 140 260 120 280 L80 280 C60 280 50 265 50 250Z",
+};
+
 export default function HeroBanner({ data, nextRaceDate, nextRaceName }: HeroBannerProps) {
   const top3 = data.predictions.slice(0, 3);
   const pole = top3.find((p) => p.quali_position === 1) ?? top3[0];
@@ -40,10 +49,11 @@ export default function HeroBanner({ data, nextRaceDate, nextRaceName }: HeroBan
       <div className="absolute right-0 top-0 bottom-0 w-1/3 opacity-[0.04] hidden lg:block">
         <svg viewBox="0 0 400 300" className="w-full h-full" fill="none">
           <path
-            d="M50 250 C50 250 80 200 120 180 L180 160 C220 140 240 100 280 80 C320 60 360 80 380 120 L380 180 C380 220 340 240 300 240 L200 240 C160 240 140 260 120 280 L80 280 C60 280 50 265 50 250Z"
+            d={CIRCUIT_PATHS[data.circuit] ?? CIRCUIT_PATHS._fallback}
             stroke="white"
-            strokeWidth="8"
+            strokeWidth="6"
             strokeLinecap="round"
+            strokeLinejoin="round"
           />
         </svg>
       </div>
