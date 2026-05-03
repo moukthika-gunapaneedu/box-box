@@ -16,7 +16,7 @@ import pandas as pd
 
 from feature_engineer import build_inference_features, FEATURE_COLS
 from collect_data import get_race_results, get_race_calendar
-from utils import DRIVERS_2026, TEAM_COLORS, OVERTAKE_INDEX, season_weight
+from utils import DRIVERS_2026, TEAM_COLORS, OVERTAKE_INDEX, season_weight, get_circuit_type
 
 MODELS_DIR = Path(__file__).parent.parent / "models"
 DATA_DIR = Path(__file__).parent.parent / "data"
@@ -230,7 +230,7 @@ def predict(round_num: int | None = None) -> dict:
         "race": race_meta["name"],
         "round": round_num,
         "circuit": race_meta["circuit"],
-        "circuit_type": race_meta.get("circuit_type", "technical"),
+        "circuit_type": race_meta.get("circuit_type") or get_circuit_type(race_meta.get("circuit", "")),
         "predicted_at": datetime.now(timezone.utc).isoformat(),
         "data_freshness": data_freshness,
         "model_source": model_source,
