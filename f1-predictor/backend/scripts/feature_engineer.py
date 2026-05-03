@@ -167,7 +167,13 @@ def _build_race_features(
 
     # Race weather (fetched once, applied to all drivers)
     try:
-        weather_dict = get_race_weather(year, round_num, race_date=race_meta.get("date"))
+        weather_dict = get_race_weather(
+            year, round_num,
+            race_date=race_meta.get("date"),
+            lat=float(race_meta["lat"]) if race_meta.get("lat") else None,
+            lon=float(race_meta["lon"]) if race_meta.get("lon") else None,
+            race_datetime_utc=race_meta.get("race_datetime"),
+        )
     except Exception:
         weather_dict = {"is_raining": 0, "track_temp_celsius": 30.0}
 
@@ -473,7 +479,13 @@ def build_inference_features(
         con_standings = pd.DataFrame()
 
     try:
-        weather_dict = get_race_weather(year, round_num, race_date=race_meta.get("date"))
+        weather_dict = get_race_weather(
+            year, round_num,
+            race_date=race_meta.get("date"),
+            lat=float(race_meta["lat"]) if race_meta.get("lat") else None,
+            lon=float(race_meta["lon"]) if race_meta.get("lon") else None,
+            race_datetime_utc=race_meta.get("race_datetime"),
+        )
     except Exception:
         weather_dict = {"is_raining": 0, "track_temp_celsius": 30.0}
 

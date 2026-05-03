@@ -161,13 +161,16 @@ def get_race_calendar(year: int) -> list[dict]:
                     race_datetime = f"{date}T00:00:00Z"
                 else:
                     race_datetime = ""
+                loc = r.get("Circuit", {}).get("Location", {})
                 result.append({
                     "season": year,
                     "round": int(r["round"]),
                     "name": r["raceName"],
                     "circuit": r["Circuit"]["circuitName"],
-                    "country": r.get("Circuit", {}).get("Location", {}).get("country", ""),
-                    "locality": r.get("Circuit", {}).get("Location", {}).get("locality", ""),
+                    "country": loc.get("country", ""),
+                    "locality": loc.get("locality", ""),
+                    "lat": loc.get("lat"),
+                    "lon": loc.get("long"),
                     "date": date,
                     "time": time,
                     "race_datetime": race_datetime,
@@ -316,17 +319,76 @@ def get_weather_forecast(session_key: int) -> dict:
     }
 
 
-def get_race_weather(year: int, round_num: int, race_date: str | None = None) -> dict:
+OPEN_METEO_BASE = "https://api.open-meteo.com/v1"
+
+
+def get_weather_forecast_for_race(lat: float, lon: float, race_datetime_utc: str) -> dict | None:
     """
-    Return aggregated weather conditions for a race session.
-    Returns: {'is_raining': 0|1, 'track_temp_celsius': float}
+    Fetch hourly weather forecast from Open-Meteo for the race start time.
+    Returns {'is_raining': 0|1, 'track_temp_celsius': float} or None on failure.
 
-    race_date: ISO date string (YYYY-MM-DD) of the race. When provided, sessions are
-    matched by date proximity rather than round index — avoids miscounting sprint races
-    in 2026 where round_number is None for all sessions.
+    Track temperature is estimated from air temp and cloud cover:
+      track_temp = air_temp + 7 + 18 * (1 - cloud_fraction)
+    Calibrated on Miami 2026 weekend data:
+      - Overcast (100% cloud): air=27.7°C → track≈34.7°C (matches live 34.85°C)
+      - Clear sky (0% cloud):  air=30°C   → track≈55°C   (matches practice 52-57°C)
+    """
+    try:
+        race_date = race_datetime_utc[:10]
+        url = f"{OPEN_METEO_BASE}/forecast"
+        params = {
+            "latitude": lat,
+            "longitude": lon,
+            "hourly": "temperature_2m,precipitation,cloudcover",
+            "timezone": "UTC",
+            "start_date": race_date,
+            "end_date": race_date,
+        }
+        data = _cached_get(url, params=params, ttl_hours=2)
+        if not data or "hourly" not in data:
+            return None
 
-    If the race session has no weather yet (race hasn't started), falls back to the
-    qualifying session from the same weekend.
+        hourly = data["hourly"]
+        race_hour = race_datetime_utc[:13]  # "YYYY-MM-DDTHH"
+        # Find closest hour
+        idx = None
+        for i, t in enumerate(hourly["time"]):
+            if t.startswith(race_hour):
+                idx = i
+                break
+        if idx is None:
+            idx = 0  # fallback to first reading of race day
+
+        air_temp = hourly["temperature_2m"][idx]
+        cloudcover = hourly["cloudcover"][idx]
+        precip = hourly["precipitation"][idx]
+
+        cloud_fraction = max(0.0, min(1.0, cloudcover / 100.0))
+        track_temp = air_temp + 7 + 18 * (1 - cloud_fraction)
+        is_raining = int(precip > 0.1)
+
+        return {"is_raining": is_raining, "track_temp_celsius": round(track_temp, 1)}
+    except Exception:
+        return None
+
+
+def get_race_weather(
+    year: int,
+    round_num: int,
+    race_date: str | None = None,
+    lat: float | None = None,
+    lon: float | None = None,
+    race_datetime_utc: str | None = None,
+) -> dict:
+    """
+    Return weather conditions for a race. Priority order:
+      1. Live race session data from OpenF1 (race has started)
+      2. Open-Meteo forecast for race start time (lat/lon + race_datetime_utc required)
+      3. Sprint/qualifying session from the same weekend (same circuit, close conditions)
+      4. Hardcoded default
+
+    race_date: YYYY-MM-DD used for date-proximity session matching.
+    lat/lon + race_datetime_utc: enables weather forecast for upcoming races.
     """
     _DEFAULT = {"is_raining": 0, "track_temp_celsius": 30.0}
     try:
@@ -373,20 +435,34 @@ def get_race_weather(year: int, round_num: int, race_date: str | None = None) ->
             except Exception:
                 return None
 
-        # Try race session first
+        # Try race session first (most accurate — actual race conditions)
         result = _extract_weather(target[0]["session_key"])
         if result:
             return result
 
-        # Race hasn't started yet — fall back to qualifying session from the same weekend.
-        # Find the qualifying session closest in date to the race session.
+        # Race hasn't started — try Open-Meteo forecast for the exact race start time/location
+        if lat is not None and lon is not None and race_datetime_utc:
+            forecast = get_weather_forecast_for_race(lat, lon, race_datetime_utc)
+            if forecast:
+                return forecast
+
+        # Fall back to the best available session from the same weekend.
+        # Only consider sessions within 3 days before race day.
+        # Prefer Sprint Race (same 4pm start time) over Qualifying (evening).
         if race_date:
-            quali_sessions = [s for s in sessions if s.get("session_type") == "Qualifying"]
-            if quali_sessions:
-                closest_quali = min(quali_sessions, key=lambda s: abs(
-                    (pd.Timestamp(s["date_start"][:10]) - pd.Timestamp(race_date[:10])).total_seconds()
-                ))
-                result = _extract_weather(closest_quali["session_key"])
+            race_session_key = target[0]["session_key"]
+            race_ts = pd.Timestamp(race_date[:10])
+            weekend_sessions = [
+                s for s in sessions
+                if s.get("session_key") != race_session_key
+                and 0 <= (race_ts - pd.Timestamp(s["date_start"][:10])).days <= 3
+            ]
+            # Sprint Race sessions first (same time of day as race), then everything else by date proximity
+            sprint_races = [s for s in weekend_sessions if s.get("session_type") == "Race"]
+            others = [s for s in weekend_sessions if s.get("session_type") != "Race"]
+            others_sorted = sorted(others, key=lambda s: abs((pd.Timestamp(s["date_start"][:10]) - race_ts).days))
+            for candidate in sprint_races + others_sorted:
+                result = _extract_weather(candidate["session_key"])
                 if result:
                     return result
 
