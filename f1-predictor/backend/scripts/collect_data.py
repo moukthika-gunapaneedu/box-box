@@ -113,6 +113,34 @@ def get_qualifying_results(year: int, round_num: int) -> pd.DataFrame:
         return pd.DataFrame()
 
 
+def get_sprint_results(year: int, round_num: int) -> pd.DataFrame:
+    """Fetch sprint race results for a given year/round from Jolpica."""
+    url = f"{JOLPICA_BASE}/{year}/{round_num}/sprint.json"
+    data = _cached_get(url, ttl_hours=48)
+    try:
+        races = data["MRData"]["RaceTable"]["Races"]
+        if not races:
+            return pd.DataFrame()
+        results = races[0]["SprintResults"]
+        rows = []
+        for r in results:
+            fl = r.get("FastestLap", {})
+            fastest_lap_time = fl.get("Time", {}).get("time")
+            rows.append({
+                "season": year,
+                "round": round_num,
+                "driverCode": r["Driver"].get("code", r["Driver"]["driverId"].upper()[:3]),
+                "driverId": r["Driver"]["driverId"],
+                "constructorId": r["Constructor"]["constructorId"],
+                "sprint_position": int(r["position"]),
+                "fastest_lap_time": fastest_lap_time,
+                "status": r.get("status", ""),
+            })
+        return pd.DataFrame(rows)
+    except (KeyError, IndexError):
+        return pd.DataFrame()
+
+
 def get_race_calendar(year: int) -> list[dict]:
     """Return list of races for a season with full datetime info."""
     url = f"{JOLPICA_BASE}/{year}.json"

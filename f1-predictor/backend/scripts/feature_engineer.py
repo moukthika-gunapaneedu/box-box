@@ -12,6 +12,7 @@ import pandas as pd
 from collect_data import (
     get_race_results,
     get_qualifying_results,
+    get_sprint_results,
     get_constructor_standings,
     get_driver_standings,
     get_fp_pace,
@@ -23,6 +24,43 @@ DATA_DIR = Path(__file__).parent.parent / "data"
 DATA_DIR.mkdir(exist_ok=True)
 
 HISTORY_SEASONS = [2023, 2024, 2025, 2026]  # 2026 included: new reg era, but real ground truth outweighs noise
+
+
+def _sprint_pace_df(year: int, round_num: int) -> pd.DataFrame:
+    """
+    Build a pace-delta DataFrame from sprint fastest laps, in the same format
+    as get_fp_pace() output (columns: driverCode, fp_pace_delta_pct).
+    Used as fallback on sprint weekends where FP2/FP3 don't exist.
+    """
+    try:
+        sprint = get_sprint_results(year, round_num)
+        if sprint.empty or "fastest_lap_time" not in sprint.columns:
+            return pd.DataFrame()
+        sprint = sprint.dropna(subset=["fastest_lap_time"]).copy()
+        if sprint.empty:
+            return pd.DataFrame()
+        sprint["lap_seconds"] = sprint["fastest_lap_time"].apply(_time_str_to_seconds)
+        sprint = sprint.dropna(subset=["lap_seconds"])
+        if sprint.empty:
+            return pd.DataFrame()
+        fastest = sprint["lap_seconds"].min()
+        sprint["fp_pace_delta_pct"] = (sprint["lap_seconds"] - fastest) / fastest * 100
+        return sprint[["driverCode", "fp_pace_delta_pct"]].reset_index(drop=True)
+    except Exception:
+        return pd.DataFrame()
+
+
+def _time_str_to_seconds(t: str | None) -> float | None:
+    """Parse lap time string '1:40.331' → seconds."""
+    if not t or not isinstance(t, str):
+        return None
+    try:
+        parts = t.split(":")
+        if len(parts) == 2:
+            return float(parts[0]) * 60 + float(parts[1])
+        return float(t)
+    except ValueError:
+        return None
 
 
 # ---------------------------------------------------------------------------
@@ -102,15 +140,17 @@ def _build_race_features(
         ((all_results["season"] == year) & (all_results["round"] < round_num))
     ]
 
-    # FP pace: try FP3 first (closer to race setup), fall back to FP2
+    # FP pace: FP3 → FP2 → FP1 → sprint fastest laps (sprint weekends have no FP2/FP3)
     fp_pace = pd.DataFrame()
-    for session in ("Practice 3", "Practice 2"):
+    for session in ("Practice 3", "Practice 2", "Practice 1"):
         try:
             fp_pace = get_fp_pace(year, round_num, session)
             if not fp_pace.empty:
                 break
         except Exception:
             pass
+    if fp_pace.empty:
+        fp_pace = _sprint_pace_df(year, round_num)
 
     # Driver + constructor standings: use previous round to avoid leakage.
     # For round 1, use end of prior season standings.
@@ -411,13 +451,15 @@ def build_inference_features(
         quali = pd.DataFrame()
 
     fp_pace = pd.DataFrame()
-    for session in ("Practice 3", "Practice 2"):
+    for session in ("Practice 3", "Practice 2", "Practice 1"):
         try:
             fp_pace = get_fp_pace(year, round_num, session)
             if not fp_pace.empty:
                 break
         except Exception:
             pass
+    if fp_pace.empty:
+        fp_pace = _sprint_pace_df(year, round_num)
 
     try:
         if round_num == 1:
