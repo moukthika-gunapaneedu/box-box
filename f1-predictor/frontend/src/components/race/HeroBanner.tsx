@@ -20,13 +20,16 @@ const FRESHNESS_LABELS: Record<string, string> = {
   "race-day": "Race Day",
 };
 
-// Simplified circuit outlines keyed by circuit name from predictions.json
-const CIRCUIT_PATHS: Record<string, string> = {
-  "Miami International Autodrome":
-    "M 68,250 L 68,55 C 68,28 105,18 135,36 L 176,43 C 195,38 210,50 210,50 L 300,50 C 335,50 342,80 340,108 L 340,192 C 340,220 322,232 300,238 L 278,244 C 260,250 250,237 248,222 C 246,208 258,202 270,208 C 282,214 284,228 272,236 L 254,242 C 236,248 224,236 222,222 C 220,208 232,202 244,208 C 254,213 256,226 246,234 L 228,240 C 210,246 198,234 196,220 C 194,207 204,200 215,205 C 225,210 226,224 217,230 L 205,236 C 188,244 168,244 148,246 L 112,250 C 92,252 75,252 68,250 Z",
-  // Generic fallback used for circuits without a dedicated path
-  _fallback:
-    "M50 250 C50 250 80 200 120 180 L180 160 C220 140 240 100 280 80 C320 60 360 80 380 120 L380 180 C380 220 340 240 300 240 L200 240 C160 240 140 260 120 280 L80 280 C60 280 50 265 50 250Z",
+// Circuit outlines: path + viewBox keyed by circuit name from predictions.json
+const CIRCUIT_PATHS: Record<string, { d: string; viewBox: string }> = {
+  "Miami International Autodrome": {
+    viewBox: "0 0 794.1 434",
+    d: "M316.8,101.5c15.4,9.2,159,93,165.6,97c8.1,5,10.4,9.9,10.4,14.7c0,3.6-4.3,10.7-12.4,15.1c-8.1,4.4-17.8,9.4-18.7,18.9s4.6,34.7-8.3,45c-13,10.3-28.3,22.8-69.8,22.8c-16.9,0-43.5-11.2-57.5-19.5c-14-8.3-76.4-44.8-83-48.3s-14.7-6.6-23-6.4s-21.7,4.6-30.3,11.2c-8.6,6.6-17.8,13.2-34.2,13.2c-13.8,0-26.1-14.3-29.2-17.8c-3.1-3.5-15.4-15.1-30.5-15.1s-34.2,5.9-43,14c-8.8,8.1-14.9,14.3-14.9,31.4s14.5,20.4,23.3,20.4c5.9,0,13-2,29.6-2s41.7,13.6,69.6,13.6S285,308,292.6,308c7.7,0,22.4,1.3,36.7,7c14.3,5.7,51.8,27,99.2,27c16.7,0,48.5-1.5,65.9-6.4s101-33.8,114.4-38.9c4.2-1.6,36.5-15.3,64.1-29c22.2-11,31.9-15.2,41.5-22.4c2.9-2.2,4.8-4.1,4.8-7.9s-5.2-6.4-7.6-8.1c-2.4-1.7-12.8-7.8-15.8-9.8c-3-2-11.2-7.4-11.2-19c0-11.6,7.4-21.4,19.5-21.4s19.1,0,22.9,0s11.6,0.8,18.4-8.6s10.6-15.7,11.1-17.4s1.9-5-0.9-6.8c-2.8-1.8-5.3-3.4-6.1-3.9s-2.5-2.7-1.3-7.8c1.2-5.1,6.7-23.3,7.1-26.9c0.4-3.6,1.2-10.9-6.2-11c-7.4-0.1-472.7-18.4-493.1-19.3c-20.4-0.9-117.2-4.6-122.5-4.6s-10.2,2-10.2,8.4c0,6.4,3.4,8.3,6.3,10.7c2.9,2.4,26,17.6,28.8,19.5s8.4,4.8,16,4.8c4.2,0,6.8,0,9.2,0c7.1,0,14.1-2.8,19.2-5.3c5.1-2.5,31.6-15.8,36.9-18c5.3-2.2,12.6-2.9,20.3-2.9c7.7,0,18.4,0,23.2,0s17,2.8,22.1,5.3S316.8,101.5,316.8,101.5z",
+  },
+  _fallback: {
+    viewBox: "0 0 400 300",
+    d: "M50 250 C50 250 80 200 120 180 L180 160 C220 140 240 100 280 80 C320 60 360 80 380 120 L380 180 C380 220 340 240 300 240 L200 240 C160 240 140 260 120 280 L80 280 C60 280 50 265 50 250Z",
+  },
 };
 
 export default function HeroBanner({ data, nextRaceDate, nextRaceName }: HeroBannerProps) {
@@ -46,17 +49,22 @@ export default function HeroBanner({ data, nextRaceDate, nextRaceName }: HeroBan
       />
 
       {/* Circuit silhouette decoration */}
-      <div className="absolute right-0 top-0 bottom-0 w-1/3 opacity-[0.04] hidden lg:block">
-        <svg viewBox="0 0 400 300" className="w-full h-full" fill="none">
-          <path
-            d={CIRCUIT_PATHS[data.circuit] ?? CIRCUIT_PATHS._fallback}
-            stroke="white"
-            strokeWidth="6"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      </div>
+      {(() => {
+        const circuit = CIRCUIT_PATHS[data.circuit] ?? CIRCUIT_PATHS._fallback;
+        return (
+          <div className="absolute right-0 top-0 bottom-0 w-1/3 opacity-[0.06] hidden lg:block">
+            <svg viewBox={circuit.viewBox} className="w-full h-full" fill="none" preserveAspectRatio="xMidYMid meet">
+              <path
+                d={circuit.d}
+                stroke="white"
+                strokeWidth="8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </div>
+        );
+      })()}
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
         {/* Round badge + freshness */}
