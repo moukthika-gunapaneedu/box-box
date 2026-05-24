@@ -232,6 +232,11 @@ def _driver_features(
     if weather_dict is None:
         weather_dict = {"is_raining": 0, "track_temp_celsius": 30.0}
 
+    # DNS / DSQ events are not race-pace data — strip them before computing any form metric.
+    # "Did not start" and "Disqualified" distort averages, DNF rates, and positions-gained
+    # the same way a retirement does, but without any pace signal at all.
+    _NON_RACE = {"Did not start", "Did not qualify", "Disqualified", "Withdrew", "Excluded"}
+
     # ---- Qualifying features ----
     # Fallback: driver's average grid position from recent races (much better than flat P15)
     driver_past_for_quali = past_results[past_results["driverCode"] == driver_code]
@@ -268,6 +273,9 @@ def _driver_features(
 
     # ---- Recent form (last 5 races) ----
     driver_past = past_results[past_results["driverCode"] == driver_code].copy()
+    # Strip DNS/DSQ before any form computation — these aren't race-pace events
+    if "status" in driver_past.columns:
+        driver_past = driver_past[~driver_past["status"].isin(_NON_RACE)]
     if not driver_past.empty:
         last5 = driver_past.sort_values(["season", "round"]).tail(5)
         feats["recent_form_5"] = float(last5["position"].mean()) if len(last5) > 0 else 10.0
@@ -304,7 +312,32 @@ def _driver_features(
     circuit = race_meta.get("circuit", "")
     circuit_past = driver_past[driver_past.get("circuit", pd.Series(dtype=str)) == circuit] if "circuit" in driver_past.columns else pd.DataFrame()
     if not circuit_past.empty:
-        feats["circuit_hist_avg"] = float(circuit_past["position"].mean())
+        # Exclude retirements — DNFs reflect reliability not pace and distort the mean.
+        circuit_classified = circuit_past[circuit_past["status"] != "Retired"] if "status" in circuit_past.columns else circuit_past
+        # Prefer current-team results so a driver's record with a previous team
+        # (different car/era) doesn't inflate or deflate their circuit average.
+        current_constructor = (
+            driver_past.sort_values(["season", "round"]).iloc[-1]["constructorId"]
+            if not driver_past.empty and "constructorId" in driver_past.columns
+            else None
+        )
+        circuit_same_team = (
+            circuit_classified[circuit_classified["constructorId"] == current_constructor]
+            if current_constructor is not None and "constructorId" in circuit_classified.columns
+            else pd.DataFrame()
+        )
+        circuit_rows = (
+            circuit_same_team if not circuit_same_team.empty
+            else circuit_classified if not circuit_classified.empty
+            else pd.DataFrame()
+        )
+        if not circuit_rows.empty:
+            sorted_rows = circuit_rows.sort_values(["season", "round"])
+            n = len(sorted_rows)
+            weights = np.exp(np.linspace(0, 2, n))
+            feats["circuit_hist_avg"] = float(np.average(sorted_rows["position"], weights=weights))
+        else:
+            feats["circuit_hist_avg"] = feats["recent_form_5"]
     else:
         feats["circuit_hist_avg"] = feats["recent_form_5"]  # fallback
 
@@ -337,8 +370,12 @@ def _driver_features(
         else:
             feats["team_reliability_score"] = 0.9
 
-        # Team race pace rank: exponentially weighted recent races (more weight to recent)
-        team_recent = past_results[past_results["constructorId"] == constructor_id].tail(20).copy()
+        # Team race pace rank: exponentially weighted recent races (more weight to recent).
+        # Exclude DNS/DSQ — those aren't race-pace data and inflate the rank badly.
+        team_recent = past_results[past_results["constructorId"] == constructor_id].copy()
+        if "status" in team_recent.columns:
+            team_recent = team_recent[~team_recent["status"].isin(_NON_RACE)]
+        team_recent = team_recent.sort_values(["season", "round"]).tail(20)
         if not team_recent.empty:
             weights = np.exp(np.linspace(0, 1, len(team_recent)))
             feats["team_race_pace_rank"] = float(np.average(team_recent["position"], weights=weights))
