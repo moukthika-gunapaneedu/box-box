@@ -15,7 +15,7 @@ const config: Config = {
         border: "#2A2A2A",
         "f1-red": "#E10600",
         platinum: "#E8E8E8",
-        muted: "#888888",
+        muted: "#A0A0A0",
         gold: "#FFD700",
         silver: "#C0C0C0",
         bronze: "#CD7F32",
