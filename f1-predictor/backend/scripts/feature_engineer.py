@@ -152,6 +152,13 @@ def _build_race_features(
     if fp_pace.empty:
         fp_pace = _sprint_pace_df(year, round_num)
 
+    # Sprint finishing positions (empty DataFrame for non-sprint weekends)
+    sprint_results = pd.DataFrame()
+    try:
+        sprint_results = get_sprint_results(year, round_num)
+    except Exception:
+        pass
+
     # Driver + constructor standings: use previous round to avoid leakage.
     # For round 1, use end of prior season standings.
     try:
@@ -191,6 +198,7 @@ def _build_race_features(
             standings_df=standings,
             con_standings_df=con_standings,
             weather_dict=weather_dict,
+            sprint_df=sprint_results,
         )
         feats["season"] = year
         feats["round"] = round_num
@@ -217,6 +225,7 @@ def _driver_features(
     standings_df: pd.DataFrame = pd.DataFrame(),
     con_standings_df: pd.DataFrame = pd.DataFrame(),
     weather_dict: dict | None = None,
+    sprint_df: pd.DataFrame = pd.DataFrame(),
 ) -> dict:
     """Compute all features for a single driver in a single race."""
     feats: dict = {"driverCode": driver_code}
@@ -402,6 +411,38 @@ def _driver_features(
         feats["champ_position_norm"] = 0.5  # neutral default
         feats["champ_points"] = 0.0
 
+    # ---- Sprint result ----
+    # NaN when no sprint this weekend; model learns to ignore it for non-sprint rounds.
+    if not sprint_df.empty and "driverCode" in sprint_df.columns and "sprint_position" in sprint_df.columns:
+        srow = sprint_df[sprint_df["driverCode"] == driver_code]
+        if not srow.empty:
+            feats["sprint_position"] = float(srow.iloc[0]["sprint_position"])
+        else:
+            feats["sprint_position"] = float(len(sprint_df) + 1)
+    else:
+        feats["sprint_position"] = np.nan
+
+    # ---- Sprint pace delta ----
+    # Race-condition lap times from the sprint — more predictive than practice pace.
+    # NaN for non-sprint weekends.
+    if not sprint_df.empty and "fastest_lap_time" in sprint_df.columns:
+        sprint_times = {}
+        for _, spr_row in sprint_df.iterrows():
+            t = _time_str_to_seconds(spr_row.get("fastest_lap_time"))
+            if t is not None:
+                sprint_times[spr_row["driverCode"]] = t
+        if sprint_times:
+            fastest_sprint = min(sprint_times.values())
+            driver_sprint_time = sprint_times.get(driver_code)
+            if driver_sprint_time is not None:
+                feats["sprint_pace_delta_pct"] = (driver_sprint_time - fastest_sprint) / fastest_sprint * 100
+            else:
+                feats["sprint_pace_delta_pct"] = np.nan
+        else:
+            feats["sprint_pace_delta_pct"] = np.nan
+    else:
+        feats["sprint_pace_delta_pct"] = np.nan
+
     # ---- Weather features ----
     feats["is_raining"] = int(weather_dict.get("is_raining", 0))
     feats["track_temp_celsius"] = float(weather_dict.get("track_temp_celsius", 30.0))
@@ -467,6 +508,12 @@ def build_inference_features(
     if fp_pace.empty:
         fp_pace = _sprint_pace_df(year, round_num)
 
+    sprint_results = pd.DataFrame()
+    try:
+        sprint_results = get_sprint_results(year, round_num)
+    except Exception:
+        pass
+
     try:
         if round_num == 1:
             standings = get_driver_standings(year - 1)
@@ -502,6 +549,7 @@ def build_inference_features(
             standings_df=standings,
             con_standings_df=con_standings,
             weather_dict=weather_dict,
+            sprint_df=sprint_results,
         )
         feats["season"] = year
         feats["round"] = round_num
@@ -527,6 +575,8 @@ FEATURE_COLS = [
     "career_podium_rate",
     "constructor_champ_pos_norm",
     "recent_season_avg_pos",
+    "sprint_position",
+    "sprint_pace_delta_pct",
     "is_raining",
     "track_temp_celsius",
     # circuit_chaos_rate: tested, contributes 0% — removed

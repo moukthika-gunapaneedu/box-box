@@ -318,6 +318,9 @@ def _key_factors(row: pd.Series, win_prob: float) -> list[str]:
 def _data_freshness(df: pd.DataFrame) -> str:
     has_quali = df["quali_position"].notna().any() and (df["quali_position"] != 15).any()
     has_fp = df["fp_pace_delta_pct"].notna().any()
+    has_sprint = "sprint_position" in df.columns and df["sprint_position"].notna().any()
+    if has_sprint:
+        return "post-sprint"
     if has_quali:
         return "post-qualifying"
     if has_fp:

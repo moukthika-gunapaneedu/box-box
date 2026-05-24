@@ -1,22 +1,22 @@
 {
-  "race": "Miami Grand Prix",
-  "round": 4,
-  "circuit": "Miami International Autodrome",
+  "race": "Canadian Grand Prix",
+  "round": 5,
+  "circuit": "Circuit Gilles Villeneuve",
   "circuit_type": "street_hybrid",
-  "predicted_at": "2026-05-03T16:24:39.948370+00:00",
-  "data_freshness": "post-qualifying",
+  "predicted_at": "2026-05-24T16:56:55.874929+00:00",
+  "data_freshness": "post-sprint",
   "model_source": "ml_ensemble",
   "model_accuracy_ytd": 1.0,
   "predictions": [
     {
-      "driver_code": "ANT",
-      "driver_name": "Kimi Antonelli",
+      "driver_code": "RUS",
+      "driver_name": "George Russell",
       "team": "Mercedes",
       "team_color": "#27F4D2",
-      "driver_number": 12,
-      "win_probability": 0.3264,
-      "podium_probability": 0.5702,
-      "predicted_finish": 3.0,
+      "driver_number": 63,
+      "win_probability": 0.3007,
+      "podium_probability": 0.5728,
+      "predicted_finish": 1.0,
       "confidence": "high",
       "key_factors": [
         "Starting from pole",
@@ -27,38 +27,22 @@
       "position": 1
     },
     {
-      "driver_code": "VER",
-      "driver_name": "Max Verstappen",
-      "team": "Red Bull Racing",
-      "team_color": "#3671C6",
-      "driver_number": 1,
-      "win_probability": 0.1088,
-      "podium_probability": 0.561,
-      "predicted_finish": 1.0,
-      "confidence": "medium",
+      "driver_code": "ANT",
+      "driver_name": "Kimi Antonelli",
+      "team": "Mercedes",
+      "team_color": "#27F4D2",
+      "driver_number": 12,
+      "win_probability": 0.2511,
+      "podium_probability": 0.5919,
+      "predicted_finish": 2.0,
+      "confidence": "high",
       "key_factors": [
         "P2 on grid",
-        "Strong practice pace"
+        "Good recent form",
+        "Reliable car"
       ],
       "quali_position": 2,
       "position": 2
-    },
-    {
-      "driver_code": "NOR",
-      "driver_name": "Lando Norris",
-      "team": "McLaren",
-      "team_color": "#FF8000",
-      "driver_number": 4,
-      "win_probability": 0.0568,
-      "podium_probability": 0.5418,
-      "predicted_finish": 5.0,
-      "confidence": "medium",
-      "key_factors": [
-        "P4 grid position",
-        "Strong practice pace"
-      ],
-      "quali_position": 4,
-      "position": 3
     },
     {
       "driver_code": "HAM",
@@ -66,33 +50,49 @@
       "team": "Ferrari",
       "team_color": "#E8002D",
       "driver_number": 44,
-      "win_probability": 0.056,
-      "podium_probability": 0.056,
-      "predicted_finish": 4.0,
-      "confidence": "medium",
-      "key_factors": [
-        "P6 grid position",
-        "Reliable car"
-      ],
-      "quali_position": 6,
-      "position": 4
-    },
-    {
-      "driver_code": "RUS",
-      "driver_name": "George Russell",
-      "team": "Mercedes",
-      "team_color": "#27F4D2",
-      "driver_number": 63,
-      "win_probability": 0.0512,
-      "podium_probability": 0.5729,
-      "predicted_finish": 2.0,
+      "win_probability": 0.1065,
+      "podium_probability": 0.4248,
+      "predicted_finish": 5.0,
       "confidence": "medium",
       "key_factors": [
         "P5 grid position",
-        "Good recent form",
-        "Reliable car"
+        "Reliable car",
+        "Strong practice pace"
       ],
       "quali_position": 5,
+      "position": 3
+    },
+    {
+      "driver_code": "NOR",
+      "driver_name": "Lando Norris",
+      "team": "McLaren",
+      "team_color": "#FF8000",
+      "driver_number": 4,
+      "win_probability": 0.0545,
+      "podium_probability": 0.5851,
+      "predicted_finish": 4.0,
+      "confidence": "medium",
+      "key_factors": [
+        "P3 on grid",
+        "Strong practice pace"
+      ],
+      "quali_position": 3,
+      "position": 4
+    },
+    {
+      "driver_code": "VER",
+      "driver_name": "Max Verstappen",
+      "team": "Red Bull Racing",
+      "team_color": "#3671C6",
+      "driver_number": 1,
+      "win_probability": 0.0288,
+      "podium_probability": 0.045,
+      "predicted_finish": 7.0,
+      "confidence": "medium",
+      "key_factors": [
+        "P6 grid position"
+      ],
+      "quali_position": 6,
       "position": 5
     },
     {
@@ -101,17 +101,33 @@
       "team": "Ferrari",
       "team_color": "#E8002D",
       "driver_number": 16,
-      "win_probability": 0.0499,
-      "podium_probability": 0.5371,
+      "win_probability": 0.0195,
+      "podium_probability": 0.1364,
       "predicted_finish": 6.0,
-      "confidence": "medium",
+      "confidence": "low",
       "key_factors": [
-        "P3 on grid",
         "Good recent form",
-        "Reliable car"
+        "Reliable car",
+        "Strong practice pace"
       ],
-      "quali_position": 3,
+      "quali_position": 8,
       "position": 6
+    },
+    {
+      "driver_code": "HAD",
+      "driver_name": "Isack Hadjar",
+      "team": "Red Bull Racing",
+      "team_color": "#3671C6",
+      "driver_number": 6,
+      "win_probability": 0.0193,
+      "podium_probability": 0.0245,
+      "predicted_finish": 14.0,
+      "confidence": "low",
+      "key_factors": [
+        "High DNF risk"
+      ],
+      "quali_position": 7,
+      "position": 7
     },
     {
       "driver_code": "PIA",
@@ -119,62 +135,46 @@
       "team": "McLaren",
       "team_color": "#FF8000",
       "driver_number": 81,
-      "win_probability": 0.0344,
-      "podium_probability": 0.0344,
-      "predicted_finish": 8.0,
-      "confidence": "low",
+      "win_probability": 0.0191,
+      "podium_probability": 0.5305,
+      "predicted_finish": 3.0,
+      "confidence": "medium",
       "key_factors": [
-        "Strong practice pace"
+        "P4 grid position"
       ],
-      "quali_position": 7,
-      "position": 7
+      "quali_position": 4,
+      "position": 8
     },
     {
-      "driver_code": "BOT",
-      "driver_name": "Valtteri Bottas",
-      "team": "Cadillac",
-      "team_color": "#B40000",
-      "driver_number": 77,
-      "win_probability": 0.0238,
-      "podium_probability": 0.0238,
-      "predicted_finish": 22.0,
+      "driver_code": "SAI",
+      "driver_name": "Carlos Sainz",
+      "team": "Williams",
+      "team_color": "#64C4FF",
+      "driver_number": 55,
+      "win_probability": 0.0159,
+      "podium_probability": 0.0159,
+      "predicted_finish": 15.0,
       "confidence": "low",
       "key_factors": [
         "High DNF risk"
       ],
-      "quali_position": 19,
-      "position": 8
+      "quali_position": 15,
+      "position": 9
     },
     {
-      "driver_code": "LIN",
-      "driver_name": "Arvid Lindblad",
-      "team": "RB",
-      "team_color": "#6692FF",
-      "driver_number": 2,
-      "win_probability": 0.0234,
-      "podium_probability": 0.0234,
-      "predicted_finish": 18.0,
+      "driver_code": "BEA",
+      "driver_name": "Oliver Bearman",
+      "team": "Haas",
+      "team_color": "#B6BABD",
+      "driver_number": 87,
+      "win_probability": 0.0151,
+      "podium_probability": 0.0151,
+      "predicted_finish": 16.0,
       "confidence": "low",
       "key_factors": [
         "High DNF risk"
       ],
       "quali_position": 16,
-      "position": 9
-    },
-    {
-      "driver_code": "BOR",
-      "driver_name": "Gabriel Bortoleto",
-      "team": "Audi",
-      "team_color": "#C0C0C0",
-      "driver_number": 5,
-      "win_probability": 0.0228,
-      "podium_probability": 0.0228,
-      "predicted_finish": 20.0,
-      "confidence": "low",
-      "key_factors": [
-        "High DNF risk"
-      ],
-      "quali_position": 21,
       "position": 10
     },
     {
@@ -183,79 +183,15 @@
       "team": "Williams",
       "team_color": "#64C4FF",
       "driver_number": 23,
-      "win_probability": 0.0221,
-      "podium_probability": 0.0221,
-      "predicted_finish": 14.0,
-      "confidence": "low",
-      "key_factors": [
-        "High DNF risk"
-      ],
-      "quali_position": 15,
-      "position": 11
-    },
-    {
-      "driver_code": "BEA",
-      "driver_name": "Oliver Bearman",
-      "team": "Haas",
-      "team_color": "#B6BABD",
-      "driver_number": 87,
-      "win_probability": 0.0221,
-      "podium_probability": 0.0221,
-      "predicted_finish": 12.0,
-      "confidence": "low",
-      "key_factors": [
-        "No standout factors"
-      ],
-      "quali_position": 12,
-      "position": 12
-    },
-    {
-      "driver_code": "GAS",
-      "driver_name": "Pierre Gasly",
-      "team": "Alpine",
-      "team_color": "#FF87BC",
-      "driver_number": 10,
-      "win_probability": 0.0217,
-      "podium_probability": 0.0217,
-      "predicted_finish": 11.0,
-      "confidence": "low",
-      "key_factors": [
-        "High DNF risk"
-      ],
-      "quali_position": 9,
-      "position": 13
-    },
-    {
-      "driver_code": "ALO",
-      "driver_name": "Fernando Alonso",
-      "team": "Aston Martin",
-      "team_color": "#229971",
-      "driver_number": 14,
-      "win_probability": 0.0215,
-      "podium_probability": 0.0215,
+      "win_probability": 0.0148,
+      "podium_probability": 0.0148,
       "predicted_finish": 19.0,
       "confidence": "low",
       "key_factors": [
         "High DNF risk"
       ],
-      "quali_position": 17,
-      "position": 14
-    },
-    {
-      "driver_code": "OCO",
-      "driver_name": "Esteban Ocon",
-      "team": "Haas",
-      "team_color": "#B6BABD",
-      "driver_number": 31,
-      "win_probability": 0.0208,
-      "podium_probability": 0.0208,
-      "predicted_finish": 16.0,
-      "confidence": "low",
-      "key_factors": [
-        "High DNF risk"
-      ],
-      "quali_position": 14,
-      "position": 15
+      "quali_position": 18,
+      "position": 11
     },
     {
       "driver_code": "PER",
@@ -263,47 +199,31 @@
       "team": "Cadillac",
       "team_color": "#B40000",
       "driver_number": 11,
-      "win_probability": 0.0208,
-      "podium_probability": 0.0208,
-      "predicted_finish": 13.0,
+      "win_probability": 0.0146,
+      "podium_probability": 0.0146,
+      "predicted_finish": 20.0,
       "confidence": "low",
       "key_factors": [
         "High DNF risk"
       ],
       "quali_position": 20,
-      "position": 16
+      "position": 12
     },
     {
-      "driver_code": "SAI",
-      "driver_name": "Carlos Sainz",
-      "team": "Williams",
-      "team_color": "#64C4FF",
-      "driver_number": 55,
-      "win_probability": 0.0207,
-      "podium_probability": 0.0207,
-      "predicted_finish": 17.0,
+      "driver_code": "BOR",
+      "driver_name": "Gabriel Bortoleto",
+      "team": "Audi",
+      "team_color": "#C0C0C0",
+      "driver_number": 5,
+      "win_probability": 0.0145,
+      "podium_probability": 0.0145,
+      "predicted_finish": 12.0,
       "confidence": "low",
       "key_factors": [
         "High DNF risk"
       ],
       "quali_position": 13,
-      "position": 17
-    },
-    {
-      "driver_code": "HUL",
-      "driver_name": "Nico Hulkenberg",
-      "team": "Audi",
-      "team_color": "#C0C0C0",
-      "driver_number": 27,
-      "win_probability": 0.0203,
-      "podium_probability": 0.0203,
-      "predicted_finish": 7.0,
-      "confidence": "low",
-      "key_factors": [
-        "High DNF risk"
-      ],
-      "quali_position": 10,
-      "position": 18
+      "position": 13
     },
     {
       "driver_code": "LAW",
@@ -311,31 +231,47 @@
       "team": "RB",
       "team_color": "#6692FF",
       "driver_number": 30,
-      "win_probability": 0.02,
-      "podium_probability": 0.02,
-      "predicted_finish": 15.0,
+      "win_probability": 0.0143,
+      "podium_probability": 0.0143,
+      "predicted_finish": 11.0,
+      "confidence": "low",
+      "key_factors": [
+        "High DNF risk"
+      ],
+      "quali_position": 12,
+      "position": 14
+    },
+    {
+      "driver_code": "BOT",
+      "driver_name": "Valtteri Bottas",
+      "team": "Cadillac",
+      "team_color": "#B40000",
+      "driver_number": 77,
+      "win_probability": 0.0143,
+      "podium_probability": 0.0143,
+      "predicted_finish": 22.0,
+      "confidence": "low",
+      "key_factors": [
+        "High DNF risk"
+      ],
+      "quali_position": 22,
+      "position": 15
+    },
+    {
+      "driver_code": "HUL",
+      "driver_name": "Nico Hulkenberg",
+      "team": "Audi",
+      "team_color": "#C0C0C0",
+      "driver_number": 27,
+      "win_probability": 0.0142,
+      "podium_probability": 0.0142,
+      "predicted_finish": 13.0,
       "confidence": "low",
       "key_factors": [
         "High DNF risk"
       ],
       "quali_position": 11,
-      "position": 19
-    },
-    {
-      "driver_code": "HAD",
-      "driver_name": "Isack Hadjar",
-      "team": "Red Bull Racing",
-      "team_color": "#3671C6",
-      "driver_number": 6,
-      "win_probability": 0.0197,
-      "podium_probability": 0.0209,
-      "predicted_finish": 9.0,
-      "confidence": "low",
-      "key_factors": [
-        "Starting from pit lane (DSQ from qualifying)"
-      ],
-      "quali_position": 22,
-      "position": 20
+      "position": 16
     },
     {
       "driver_code": "STR",
@@ -343,15 +279,47 @@
       "team": "Aston Martin",
       "team_color": "#229971",
       "driver_number": 18,
-      "win_probability": 0.0187,
-      "podium_probability": 0.0187,
+      "win_probability": 0.0141,
+      "podium_probability": 0.0141,
       "predicted_finish": 21.0,
       "confidence": "low",
       "key_factors": [
         "High DNF risk"
       ],
-      "quali_position": 18,
-      "position": 21
+      "quali_position": 21,
+      "position": 17
+    },
+    {
+      "driver_code": "GAS",
+      "driver_name": "Pierre Gasly",
+      "team": "Alpine",
+      "team_color": "#FF87BC",
+      "driver_number": 10,
+      "win_probability": 0.0141,
+      "podium_probability": 0.0141,
+      "predicted_finish": 10.0,
+      "confidence": "low",
+      "key_factors": [
+        "High DNF risk"
+      ],
+      "quali_position": 14,
+      "position": 18
+    },
+    {
+      "driver_code": "LIN",
+      "driver_name": "Arvid Lindblad",
+      "team": "RB",
+      "team_color": "#6692FF",
+      "driver_number": 2,
+      "win_probability": 0.0139,
+      "podium_probability": 0.0139,
+      "predicted_finish": 8.0,
+      "confidence": "low",
+      "key_factors": [
+        "High DNF risk"
+      ],
+      "quali_position": 9,
+      "position": 19
     },
     {
       "driver_code": "COL",
@@ -359,17 +327,49 @@
       "team": "Alpine",
       "team_color": "#FF87BC",
       "driver_number": 43,
-      "win_probability": 0.0179,
-      "podium_probability": 0.0179,
-      "predicted_finish": 10.0,
+      "win_probability": 0.0137,
+      "podium_probability": 0.0137,
+      "predicted_finish": 9.0,
       "confidence": "low",
       "key_factors": [
         "High DNF risk"
       ],
-      "quali_position": 8,
+      "quali_position": 10,
+      "position": 20
+    },
+    {
+      "driver_code": "ALO",
+      "driver_name": "Fernando Alonso",
+      "team": "Aston Martin",
+      "team_color": "#229971",
+      "driver_number": 14,
+      "win_probability": 0.0134,
+      "podium_probability": 0.0134,
+      "predicted_finish": 18.0,
+      "confidence": "low",
+      "key_factors": [
+        "High DNF risk"
+      ],
+      "quali_position": 19,
+      "position": 21
+    },
+    {
+      "driver_code": "OCO",
+      "driver_name": "Esteban Ocon",
+      "team": "Haas",
+      "team_color": "#B6BABD",
+      "driver_number": 31,
+      "win_probability": 0.0134,
+      "podium_probability": 0.0134,
+      "predicted_finish": 17.0,
+      "confidence": "low",
+      "key_factors": [
+        "High DNF risk"
+      ],
+      "quali_position": 17,
       "position": 22
     }
   ],
-  "race_date": "2026-05-03T17:00:00Z",
+  "race_date": "2026-05-24T20:00:00Z",
   "season": 2026
 }
