@@ -14,7 +14,8 @@ An AI-powered Formula 1 race prediction platform for the 2026 season. Box-box co
 - **Live data integration**: qualifying results, practice pace, and pit stop data from OpenF1 and Jolpica/Ergast APIs
 - **Advanced feature engineering**: grid position, 5-race rolling form, team pace ranking, circuit-specific performance, overtaking tendency, and reliability scores
 - **Confidence scoring**: High/Medium/Low confidence with human-readable factors ("Starting from pole", "Excellent recent form")
-- **Data freshness levels**: predictions are tagged as `pre-weekend`, `post-fp`, `post-qualifying`, or `race-day` depending on what data was available when they were generated
+- **Sprint race features**: sprint finishing position, sprint vs qualifying position delta, and sprint pace gap are included as training features on sprint weekends
+- **Data freshness levels**: predictions are tagged as `pre-weekend`, `post-fp`, `post-qualifying`, `post-sprint`, or `race-day` depending on what data was available when they were generated
 - **Season accuracy tracking**: compares predictions against actual results after every race
 - **Automatic retraining**: models retrain after every 4 completed races as new 2026 data comes in
 - **CI/CD deployment**: push to `main` and GitHub Actions builds and deploys to GitHub Pages
@@ -75,7 +76,7 @@ box-box/
 ### Prediction Pipeline
 
 1. **Data collection**: `collect_data.py` fetches qualifying results, practice pace, pit stop data, standings, and weather from OpenF1 and Jolpica. Responses are cached with MD5-keyed files and configurable TTL. Failed requests retry up to 3 times with exponential backoff.
-2. **Feature engineering**: `feature_engineer.py` builds a ~20-feature matrix per driver per race. Temporal guards prevent future data from leaking into training windows.
+2. **Feature engineering**: `feature_engineer.py` builds a 22-feature matrix per driver per race. Temporal guards prevent future data from leaking into training windows.
 3. **Inference**: `predict_race.py` loads the trained models, runs all three, and calibrates output probabilities using temperature scaling (3.0 for wins, 2.0 for podiums). Win probabilities are normalized to sum to 1.0; podium probabilities are normalized to sum to 3.0. If models aren't available, a fallback heuristic scores drivers using qualifying position, recent form, and team pace.
 4. **Output**: predictions are written to `frontend/public/data/predictions.json` and picked up by the static Next.js build.
 5. **Post-race**: `update_history.py` records actual results, compares against predictions, and updates `history.json`. After every 4 completed races, the models retrain on the expanded dataset.
@@ -87,18 +88,27 @@ Each driver-race row is built from:
 | Feature | Description |
 |---|---|
 | `quali_position` | Starting grid position |
+| `quali_gap_to_pole_pct` | Best quali lap as % behind pole |
 | `recent_form_5` | Average finishing position over last 5 races |
-| `dnf_rate_10` | DNF rate over last 10 races |
+| `recent_season_avg_pos` | Driver's average finish in their most recent complete season |
+| `dnf_rate_10` | DNF rate over last 10 races (DNS/DSQ events excluded) |
 | `career_win_rate` | Career win rate |
 | `career_podium_rate` | Career podium rate |
-| `circuit_avg_finish` | Driver's average finish at this specific circuit |
-| `circuit_chaos_rate` | Circuit variance (grid-to-finish spread) |
+| `circuit_hist_avg` | Driver's avg finish at this circuit with current team only; exponentially recency-weighted; Retired results excluded |
 | `overtake_difficulty` | Circuit overtake index (0.3 street → 0.8 high-speed) |
-| `team_reliability` | Team DNF rate |
-| `fp_pace_delta` | Free practice pace gap to session leader |
-| `weather` | Wet/dry condition flag |
-| `championship_position` | Driver's current standings position |
-| `team_pace_rank` | Team's pace ranking relative to other constructors |
+| `team_reliability_score` | Team DNF rate; DNS/DSQ events excluded from denominator |
+| `fp_pace_delta_pct` | Best practice lap gap to session leader as % (FP3→FP2→FP1; sprint lap used on sprint weekends) |
+| `is_raining` | Wet/dry condition flag |
+| `track_temp` | Track temperature at race start |
+| `champ_position_norm` | Driver's championship position, normalised 0–1 |
+| `constructor_champ_pos_norm` | Team's constructor championship position, normalised 0–1 |
+| `team_race_pace_rank` | Team's avg finishing position over recent races (DNS/DSQ excluded) |
+| `positions_gained_avg` | Average positions gained grid→finish over recent races (DNS/DSQ excluded) |
+| `has_sprint` | 1 if sprint race data exists this weekend, 0 otherwise |
+| `sprint_position` | Sprint race finishing position (NaN on non-sprint weekends) |
+| `sprint_quali_delta` | Sprint position minus qualifying position (negative = gained positions) |
+| `sprint_pace_delta_pct` | Sprint best lap vs session fastest, as % |
+| `is_new_team` | 1 if driver joined this constructor mid-season |
 
 ### Model Details
 
@@ -106,11 +116,11 @@ All three models share similar hyperparameters: 300 estimators, learning rate 0.
 
 | Model | Algorithm | Target | CV Accuracy |
 |---|---|---|---|
-| Win classifier | XGBoost | Race winner | ~48.2% |
-| Podium classifier | LightGBM | Top-3 finish | ~64.3% |
+| Win classifier | XGBoost | Race winner | 56.7% |
+| Podium classifier | LightGBM | Top-3 finish | 62.2% |
 | Position regressor | XGBoost | Final position | — |
 
-Evaluated across 56 races (2023–2026 historical + 2026 season-to-date).
+Evaluated across 60 races (2023–2026 historical + 2026 season-to-date) using 4-fold TimeSeriesSplit.
 
 ---
 
