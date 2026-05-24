@@ -56,7 +56,7 @@ const FEATURES = [
   {
     name: "Circuit Historical Average",
     weight: "Medium",
-    desc: "Driver's average finishing position at this specific circuit across all training seasons.",
+    desc: "Driver's average finish at this circuit with their current team only (removes cross-team era contamination). Retired results are excluded. Exponentially weighted so recent visits count more.",
   },
   {
     name: "Positions Gained Average",
@@ -91,7 +91,27 @@ const FEATURES = [
   {
     name: "Team Reliability Score",
     weight: "Low",
-    desc: "Constructor's DNF rate this season. Penalises teams with recent mechanical failures.",
+    desc: "Constructor's DNF rate this season. DNS and DSQ events are excluded from both numerator and denominator — only actual race starts count toward reliability.",
+  },
+  {
+    name: "Sprint Position",
+    weight: "Low–Med",
+    desc: "Finishing position in the sprint race. Only meaningful on sprint weekends — the has_sprint flag tells the model when this feature contains real data vs. imputed noise.",
+  },
+  {
+    name: "Sprint Quali Delta",
+    weight: "Low–Med",
+    desc: "Sprint finishing position minus qualifying position. Negative = gained positions, so a driver with strong race pace relative to their quali pace scores negative here. One of the top-5 most important features on sprint weekends.",
+  },
+  {
+    name: "Sprint Pace Delta",
+    weight: "Low",
+    desc: "Driver's best sprint lap vs session fastest, as a percentage. Captures outright race pace independent of grid position.",
+  },
+  {
+    name: "Sprint Weekend Flag",
+    weight: "Low",
+    desc: "Binary 0/1 flag indicating whether the current weekend has a sprint race. Without this, the model can't distinguish real sprint data from median-imputed values, making sprint features noisy.",
   },
   {
     name: "Driver DNF Rate",
@@ -129,6 +149,10 @@ const LIMITATIONS = [
   {
     title: "Mechanical failures and incidents are unpredictable",
     desc: "The model cannot predict Q1 crashes, rear-axle failures, or race-day retirements. Verstappen starting P20 in Australia after a Q1 crash is a perfect example — no historical feature could foresee that outcome.",
+  },
+  {
+    title: "Sprint weekends underrepresented",
+    desc: "There are only ~6 sprint weekends per season, so sprint features (position, pace delta, quali delta) have less training signal than their real-world value warrants. On sprint weekends the model carries higher uncertainty for drivers whose form diverges significantly between qualifying and sprint.",
   },
   {
     title: "No tyre strategy or race-day tactics",
@@ -212,7 +236,7 @@ export default async function ModelPage() {
           <h2 className="font-barlow font-800 text-xl uppercase tracking-wide text-platinum">Feature Engineering</h2>
         </div>
         <p className="font-inter text-xs text-muted mb-4 leading-relaxed">
-          Each row in the training dataset represents one driver in one race. 18 features are computed per driver.
+          Each row in the training dataset represents one driver in one race. 22 features are computed per driver.
           Features with no historical baseline fall back to field averages.
         </p>
         <div className="space-y-1">
@@ -286,7 +310,7 @@ export default async function ModelPage() {
             <span className="text-platinum font-500">Training: </span>
             TimeSeriesSplit cross-validation (4 folds) ensures the model is never trained on future race data — no leakage.
             Season weights: 2026 races are weighted 5× more than 2025, which is weighted 2× more than 2024.
-            Trained on ~1,800 driver-race rows across 2022–2026. Models are retrained as 2026 results accumulate.
+            Trained on ~1,500 driver-race rows across 2022–2026. Models are retrained as 2026 results accumulate.
           </p>
         </div>
       </section>
