@@ -6,7 +6,7 @@
   "predicted_at": "2026-05-24T17:33:58.170685+00:00",
   "data_freshness": "post-sprint",
   "model_source": "ml_ensemble",
-  "model_accuracy_ytd": 1.0,
+  "model_accuracy_ytd": 0.8,
   "predictions": [
     {
       "driver_code": "RUS",

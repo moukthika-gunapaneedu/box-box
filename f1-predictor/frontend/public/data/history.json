@@ -91,8 +91,31 @@
         { "driver_code": "PIA", "driver_name": "Oscar Piastri", "team": "McLaren", "team_color": "#FF8000" }
       ],
       "updated_at": "2026-05-03T18:30:00.000000+00:00"
+    },
+    {
+      "round": 5,
+      "race": "Canadian Grand Prix",
+      "circuit": "Circuit Gilles Villeneuve",
+      "race_date": "2026-05-24",
+      "predicted_winner": "RUS",
+      "actual_winner": "ANT",
+      "correct_win": false,
+      "predicted_podium": ["RUS", "ANT", "HAM"],
+      "actual_podium": ["ANT", "HAM", "VER"],
+      "podium_hits": 2,
+      "predicted_top3": [
+        { "driver_code": "RUS", "driver_name": "George Russell", "team": "Mercedes", "team_color": "#27F4D2", "win_probability": 0.2735, "podium_probability": 0.6265 },
+        { "driver_code": "ANT", "driver_name": "Kimi Antonelli", "team": "Mercedes", "team_color": "#27F4D2", "win_probability": 0.2302, "podium_probability": 0.6456 },
+        { "driver_code": "HAM", "driver_name": "Lewis Hamilton", "team": "Ferrari", "team_color": "#E8002D", "win_probability": 0.0908, "podium_probability": 0.3807 }
+      ],
+      "actual_top3": [
+        { "driver_code": "ANT", "driver_name": "Kimi Antonelli", "team": "Mercedes", "team_color": "#27F4D2" },
+        { "driver_code": "HAM", "driver_name": "Lewis Hamilton", "team": "Ferrari", "team_color": "#E8002D" },
+        { "driver_code": "VER", "driver_name": "Max Verstappen", "team": "Red Bull Racing", "team_color": "#3671C6" }
+      ],
+      "updated_at": "2026-05-24T20:30:00.000000+00:00"
     }
   ],
-  "season_winner_accuracy": 1.0,
+  "season_winner_accuracy": 0.8,
   "season_podium_accuracy": 0.667
 }
