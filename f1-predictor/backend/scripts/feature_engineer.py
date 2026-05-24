@@ -365,8 +365,13 @@ def _driver_features(
             (past_results["season"] == year)
         ]
         if not team_past.empty:
-            dnf_mask_team = ~team_past["status"].str.lower().str.contains("finish", na=False)
-            feats["team_reliability_score"] = float(1 - dnf_mask_team.mean())
+            # Exclude DNS/DSQ — these are not reliability failures, they're pre-race events
+            team_started = team_past[~team_past["status"].isin(_NON_RACE)] if "status" in team_past.columns else team_past
+            if not team_started.empty:
+                dnf_mask_team = ~team_started["status"].str.lower().str.contains("finish", na=False)
+                feats["team_reliability_score"] = float(1 - dnf_mask_team.mean())
+            else:
+                feats["team_reliability_score"] = 0.9
         else:
             feats["team_reliability_score"] = 0.9
 
@@ -450,14 +455,21 @@ def _driver_features(
 
     # ---- Sprint result ----
     # NaN when no sprint this weekend; model learns to ignore it for non-sprint rounds.
+    # has_sprint is a binary flag so the model knows when sprint features are real data
+    # vs median-imputed noise — letting it weight sprint_position/pace appropriately.
     if not sprint_df.empty and "driverCode" in sprint_df.columns and "sprint_position" in sprint_df.columns:
+        feats["has_sprint"] = 1.0
         srow = sprint_df[sprint_df["driverCode"] == driver_code]
         if not srow.empty:
             feats["sprint_position"] = float(srow.iloc[0]["sprint_position"])
         else:
             feats["sprint_position"] = float(len(sprint_df) + 1)
+        # sprint_quali_delta: negative = gained positions in sprint vs qualifying (race pace > quali pace)
+        feats["sprint_quali_delta"] = feats["sprint_position"] - feats["quali_position"]
     else:
+        feats["has_sprint"] = 0.0
         feats["sprint_position"] = np.nan
+        feats["sprint_quali_delta"] = 0.0
 
     # ---- Sprint pace delta ----
     # Race-condition lap times from the sprint — more predictive than practice pace.
@@ -612,7 +624,9 @@ FEATURE_COLS = [
     "career_podium_rate",
     "constructor_champ_pos_norm",
     "recent_season_avg_pos",
+    "has_sprint",
     "sprint_position",
+    "sprint_quali_delta",
     "sprint_pace_delta_pct",
     "is_raining",
     "track_temp_celsius",
