@@ -119,9 +119,14 @@ const FEATURES = [
     desc: "Driver's DNF rate over last 10 races. Penalises error-prone or crash-prone drivers.",
   },
   {
+    name: "Circuit Positions Gained",
+    weight: "Low–Med",
+    desc: "Average positions gained from grid to finish specifically at this circuit, with current team only. Unlike the general positions-gained average, this captures circuit-specific race-craft — e.g. a driver who always holds position at Monaco vs one who charges through the field at Spa.",
+  },
+  {
     name: "Overtake Difficulty Index",
     weight: "Low",
-    desc: "Circuit-type index: street circuits score high (hard to overtake), high-speed circuits score low.",
+    desc: "How easy it is to overtake at this circuit: higher = more overtaking opportunities (high-speed circuits like Spa/Monza score 0.8), lower = grid position is destiny (Monaco scores 0.05, Singapore 0.10). Per-circuit overrides take priority over the circuit-type default.",
   },
 ];
 
@@ -136,7 +141,7 @@ const WEIGHT_COLORS: Record<string, string> = {
 const LIMITATIONS = [
   {
     title: "Limited training data",
-    desc: "The model trains on 2022–2026 race results (~1,800 driver-race rows across 4+ seasons). This is a small dataset for ML — confidence intervals are wide, and the model is most reliable when qualifying position already tells a clear story.",
+    desc: "The model trains on 2022–2026 race results (~1,500 driver-race rows across 4+ seasons). This is a small dataset for ML — confidence intervals are wide, and the model is most reliable when qualifying position already tells a clear story.",
   },
   {
     title: "2026 is an entirely new formula",
@@ -236,7 +241,7 @@ export default async function ModelPage() {
           <h2 className="font-barlow font-800 text-xl uppercase tracking-wide text-platinum">Feature Engineering</h2>
         </div>
         <p className="font-inter text-xs text-muted mb-4 leading-relaxed">
-          Each row in the training dataset represents one driver in one race. 22 features are computed per driver.
+          Each row in the training dataset represents one driver in one race. 23 features are computed per driver.
           Features with no historical baseline fall back to field averages.
         </p>
         <div className="space-y-1">

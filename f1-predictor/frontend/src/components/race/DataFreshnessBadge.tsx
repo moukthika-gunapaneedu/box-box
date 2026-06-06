@@ -14,6 +14,12 @@ const CONFIG = {
     description: "Based on FP2/FP3 pace data",
     variant: "post-fp" as const,
   },
+  "post-sprint": {
+    icon: CheckCircle2,
+    label: "Post Sprint",
+    description: "Includes sprint race data — high accuracy",
+    variant: "post-qualifying" as const,
+  },
   "pre-weekend": {
     icon: Calendar,
     label: "Pre-Weekend",
