@@ -27,7 +27,7 @@ An AI-powered Formula 1 race prediction platform for the 2026 season. Box-box co
 | Layer | Tools |
 |---|---|
 | Frontend | Next.js 15, React 18, TypeScript, TailwindCSS, Recharts, Framer Motion, Radix UI |
-| Backend | Python 3.11, XGBoost, LightGBM, scikit-learn, pandas, FastF1 |
+| Backend | Python 3.11, XGBoost, LightGBM, scikit-learn, pandas |
 | Data | OpenF1 API, Jolpica (Ergast replacement) |
 | Deploy | GitHub Pages + GitHub Actions |
 
@@ -76,7 +76,7 @@ box-box/
 ### Prediction Pipeline
 
 1. **Data collection**: `collect_data.py` fetches qualifying results, practice pace, pit stop data, standings, and weather from OpenF1 and Jolpica. Responses are cached with MD5-keyed files and configurable TTL. Failed requests retry up to 3 times with exponential backoff.
-2. **Feature engineering**: `feature_engineer.py` builds a 22-feature matrix per driver per race. Temporal guards prevent future data from leaking into training windows.
+2. **Feature engineering**: `feature_engineer.py` builds a 23-feature matrix per driver per race. Temporal guards prevent future data from leaking into training windows.
 3. **Inference**: `predict_race.py` loads the trained models, runs all three, and calibrates output probabilities using temperature scaling (3.0 for wins, 2.0 for podiums). Win probabilities are normalized to sum to 1.0; podium probabilities are normalized to sum to 3.0. If models aren't available, a fallback heuristic scores drivers using qualifying position, recent form, and team pace.
 4. **Output**: predictions are written to `frontend/public/data/predictions.json` and picked up by the static Next.js build.
 5. **Post-race**: `update_history.py` records actual results, compares against predictions, and updates `history.json`. After every 4 completed races, the models retrain on the expanded dataset.
@@ -95,12 +95,14 @@ Each driver-race row is built from:
 | `career_win_rate` | Career win rate |
 | `career_podium_rate` | Career podium rate |
 | `circuit_hist_avg` | Driver's avg finish at this circuit with current team only; exponentially recency-weighted; Retired results excluded |
-| `overtake_difficulty` | Circuit overtake index (0.3 street → 0.8 high-speed) |
+| `circuit_positions_gained_avg` | Average positions gained grid→finish specifically at this circuit with current team. Separates "finishes well here" from "starts well here" — critical at Monaco-type tracks |
+| `overtake_difficulty` | How easy it is to overtake: higher = more opportunities (Spa/Monza 0.8), lower = grid is destiny (Monaco 0.05, Singapore 0.10). Per-circuit overrides take priority over circuit-type defaults |
 | `team_reliability_score` | Team DNF rate; DNS/DSQ events excluded from denominator |
-| `fp_pace_delta_pct` | Best practice lap gap to session leader as % (FP3→FP2→FP1; sprint lap used on sprint weekends) |
+| `fp_pace_delta_pct` | Best practice lap gap to session leader as % (FP3→FP2→FP1; sprint lap used on sprint weekends). Falls back to date-based session lookup when round_number is missing from OpenF1 |
 | `is_raining` | Wet/dry condition flag |
-| `track_temp` | Track temperature at race start |
+| `track_temp_celsius` | Track temperature at race start |
 | `champ_position_norm` | Driver's championship position, normalised 0–1 |
+| `champ_points` | Driver's championship points from the prior round |
 | `constructor_champ_pos_norm` | Team's constructor championship position, normalised 0–1 |
 | `team_race_pace_rank` | Team's avg finishing position over recent races (DNS/DSQ excluded) |
 | `positions_gained_avg` | Average positions gained grid→finish over recent races (DNS/DSQ excluded) |
@@ -108,7 +110,6 @@ Each driver-race row is built from:
 | `sprint_position` | Sprint race finishing position (NaN on non-sprint weekends) |
 | `sprint_quali_delta` | Sprint position minus qualifying position (negative = gained positions) |
 | `sprint_pace_delta_pct` | Sprint best lap vs session fastest, as % |
-| `is_new_team` | 1 if driver joined this constructor mid-season |
 
 ### Model Details
 
