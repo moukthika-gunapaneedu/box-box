@@ -270,8 +270,43 @@ def get_session_laps(year: int, round_num: int, session_type: str = "Race") -> p
     High-level helper: get lap times for a session as a DataFrame.
     session_type: 'Race', 'Qualifying', 'Practice 1', 'Practice 2', 'Practice 3'
     """
+    from collect_data import get_race_calendar
     sessions = get_openf1_sessions(year)
     target = [s for s in sessions if s.get("session_type") == session_type and s.get("round_number") == round_num]
+
+    # OpenF1 sometimes omits round_number (seen in 2026). Fall back to matching
+    # the right session by calendar date: find sessions of the correct type
+    # within the 4-day window before (and including) the race date for this round.
+    if not target:
+        try:
+            cal = get_race_calendar(year)
+            race = next((r for r in cal if r["round"] == round_num), None)
+            if race and race.get("date"):
+                race_ts = pd.Timestamp(race["date"])
+                # Map our session_type strings to OpenF1 session_type values
+                type_map = {
+                    "Practice 1": "Practice", "Practice 2": "Practice",
+                    "Practice 3": "Practice", "Race": "Race", "Qualifying": "Qualifying",
+                }
+                of1_type = type_map.get(session_type, session_type)
+                candidates = [
+                    s for s in sessions
+                    if s.get("session_type") == of1_type
+                    and s.get("date_start")
+                    and 0 <= (race_ts - pd.Timestamp(s["date_start"][:10])).days <= 4
+                ]
+                # For Practice sessions, pick by index (P1=first, P2=second, P3=third)
+                if of1_type == "Practice" and candidates:
+                    candidates = sorted(candidates, key=lambda s: s.get("date_start", ""))
+                    idx_map = {"Practice 1": 0, "Practice 2": 1, "Practice 3": 2}
+                    idx = idx_map.get(session_type, 0)
+                    if idx < len(candidates):
+                        target = [candidates[idx]]
+                elif candidates:
+                    target = [candidates[0]]
+        except Exception:
+            pass
+
     if not target:
         return pd.DataFrame()
     session_key = target[0]["session_key"]

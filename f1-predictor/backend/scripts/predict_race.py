@@ -16,7 +16,7 @@ import pandas as pd
 
 from feature_engineer import build_inference_features, FEATURE_COLS
 from collect_data import get_race_results, get_race_calendar
-from utils import DRIVERS_2026, TEAM_COLORS, OVERTAKE_INDEX, season_weight, get_circuit_type
+from utils import DRIVERS_2026, TEAM_COLORS, OVERTAKE_INDEX, season_weight, get_circuit_type, get_overtake_difficulty
 
 MODELS_DIR = Path(__file__).parent.parent / "models"
 DATA_DIR = Path(__file__).parent.parent / "data"
@@ -195,6 +195,13 @@ def predict(round_num: int | None = None) -> dict:
             "quali_position": int(features_df.iloc[i].get("quali_position", 0)),
         })
 
+    # For near-zero overtake circuits (Monaco, Singapore) the general model
+    # can't learn grid-lock from 3-4 training examples: form/pace signals drown it out.
+    # Blend toward historical grid-position base rates so P2/P3 aren't undervalued
+    # and P7 isn't given a phantom 40%+ podium chance.
+    circuit_od = get_overtake_difficulty(race_meta.get("circuit", ""))
+    results = _apply_grid_lock_calibration(results, circuit_od)
+
     # Sort by win probability — P1 = most likely to win.
     # Podium % is normalized to sum to 3.0 so it's consistent with this ranking.
     results.sort(key=lambda x: x["win_probability"], reverse=True)
@@ -249,6 +256,50 @@ def predict(round_num: int | None = None) -> dict:
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
+def _apply_grid_lock_calibration(results: list, overtake_difficulty: float) -> list:
+    """
+    Blend model probabilities toward historical grid-position base rates for circuits
+    where overtaking is near-impossible. The model's general form/pace signals dominate
+    Monaco/Singapore training examples (only 3-4 per circuit), producing backwards outputs
+    like P7 having higher podium odds than P2.
+
+    Blend weight scales linearly: 0 at overtake_difficulty=0.15, ~0.65 at Monaco (0.05).
+    Base rates derived from 4 Monaco + 4 Singapore races (2022-2025).
+    """
+    GRID_LOCK_THRESHOLD = 0.15
+    if overtake_difficulty >= GRID_LOCK_THRESHOLD:
+        return results
+
+    blend = (GRID_LOCK_THRESHOLD - overtake_difficulty) / GRID_LOCK_THRESHOLD  # 0.05 → ~0.67
+
+    # Historical podium rates by grid position across Monaco/Singapore 2022-2025.
+    # P1: 75% (pole DNF once, 2022 LEC), P2/P3: 100%, P4: 25% (VER 2022 only), P5+: ~0%.
+    GRID_POD_PRIOR = {1: 0.75, 2: 0.95, 3: 0.95, 4: 0.20, 5: 0.04, 6: 0.02}
+    GRID_WIN_PRIOR = {1: 0.42, 2: 0.28, 3: 0.18, 4: 0.06, 5: 0.02, 6: 0.01}
+
+    for r in results:
+        gp = r["quali_position"]
+        r["podium_probability"] = (
+            (1 - blend) * r["podium_probability"] + blend * GRID_POD_PRIOR.get(gp, 0.003)
+        )
+        r["win_probability"] = (
+            (1 - blend) * r["win_probability"] + blend * GRID_WIN_PRIOR.get(gp, 0.002)
+        )
+
+    # Re-normalise: win probs sum to 1, podium probs sum to 3
+    win_sum = sum(r["win_probability"] for r in results)
+    pod_sum = sum(r["podium_probability"] for r in results)
+    for r in results:
+        r["win_probability"] = round(r["win_probability"] / win_sum, 4)
+        r["podium_probability"] = round(min(0.99, r["podium_probability"] / pod_sum * 3.0), 4)
+
+    # Re-enforce podium >= win constraint after calibration
+    for r in results:
+        r["podium_probability"] = max(r["podium_probability"], r["win_probability"])
+
+    return results
+
 
 def _heuristic_predictions(df: pd.DataFrame) -> tuple:
     """

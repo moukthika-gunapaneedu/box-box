@@ -18,7 +18,7 @@ from collect_data import (
     get_fp_pace,
     get_race_weather,
 )
-from utils import season_weight, DRIVERS_2026, OVERTAKE_INDEX, get_circuit_type
+from utils import season_weight, DRIVERS_2026, get_circuit_type, get_overtake_difficulty
 
 DATA_DIR = Path(__file__).parent.parent / "data"
 DATA_DIR.mkdir(exist_ok=True)
@@ -336,10 +336,25 @@ def _driver_features(
             n = len(sorted_rows)
             weights = np.exp(np.linspace(0, 2, n))
             feats["circuit_hist_avg"] = float(np.average(sorted_rows["position"], weights=weights))
+            # Positions gained at this circuit specifically (grid - finish, positive = moved forward).
+            # Separates "finishes well here" from "starts well here" — critical at Monaco-type tracks
+            # where circuit_hist_avg is almost entirely determined by qualifying position.
+            if "grid" in sorted_rows.columns:
+                valid_grid = sorted_rows[sorted_rows["grid"] > 0]
+                if not valid_grid.empty:
+                    g_weights = np.exp(np.linspace(0, 2, len(valid_grid)))
+                    deltas = valid_grid["grid"] - valid_grid["position"]
+                    feats["circuit_positions_gained_avg"] = float(np.average(deltas, weights=g_weights))
+                else:
+                    feats["circuit_positions_gained_avg"] = 0.0
+            else:
+                feats["circuit_positions_gained_avg"] = 0.0
         else:
             feats["circuit_hist_avg"] = feats["recent_form_5"]
+            feats["circuit_positions_gained_avg"] = 0.0
     else:
         feats["circuit_hist_avg"] = feats["recent_form_5"]  # fallback
+        feats["circuit_positions_gained_avg"] = 0.0
 
     # Safety car probability proxy: at chaotic circuits, grid position predicts
     # finish position less well. Measure as mean abs(grid - finish) across all
@@ -422,7 +437,7 @@ def _driver_features(
 
     # ---- Circuit type (looked up from circuit name, never hardcoded) ----
     circuit_type = race_meta.get("circuit_type") or get_circuit_type(race_meta.get("circuit", ""))
-    feats["overtake_difficulty"] = OVERTAKE_INDEX.get(circuit_type, 0.6)
+    feats["overtake_difficulty"] = get_overtake_difficulty(race_meta.get("circuit", ""), circuit_type)
 
     # ---- Constructor championship position ----
     if not con_standings_df.empty and constructor_id and "constructorId" in con_standings_df.columns:
@@ -624,6 +639,7 @@ FEATURE_COLS = [
     "career_podium_rate",
     "constructor_champ_pos_norm",
     "recent_season_avg_pos",
+    "circuit_positions_gained_avg",
     "has_sprint",
     "sprint_position",
     "sprint_quali_delta",

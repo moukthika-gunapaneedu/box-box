@@ -112,6 +112,25 @@ OVERTAKE_INDEX: dict[str, float] = {
     "high_speed": 0.8,
 }
 
+# Per-circuit overrides — takes precedence over circuit-type lookup.
+# Monaco and Singapore are categorised as "street" but have almost no overtaking
+# unlike Baku/Jeddah which share the same type but have long DRS straights.
+CIRCUIT_OVERTAKE_OVERRIDES: dict[str, float] = {
+    "monaco": 0.05,       # virtually impossible to overtake
+    "marina bay": 0.10,   # Singapore — tight, but some passes under SC/VSC
+}
+
+
+def get_overtake_difficulty(circuit_name: str, circuit_type: str | None = None) -> float:
+    """Return overtake difficulty for a circuit, with per-circuit overrides taking priority."""
+    name_lower = circuit_name.lower()
+    for keyword, val in CIRCUIT_OVERTAKE_OVERRIDES.items():
+        if keyword in name_lower:
+            return val
+    if circuit_type is None:
+        circuit_type = get_circuit_type(circuit_name)
+    return OVERTAKE_INDEX.get(circuit_type, 0.6)
+
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
