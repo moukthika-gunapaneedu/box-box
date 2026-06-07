@@ -114,8 +114,31 @@
         { "driver_code": "VER", "driver_name": "Max Verstappen", "team": "Red Bull Racing", "team_color": "#3671C6" }
       ],
       "updated_at": "2026-05-24T20:30:00.000000+00:00"
+    },
+    {
+      "round": 6,
+      "race": "Monaco Grand Prix",
+      "circuit": "Circuit de Monaco",
+      "race_date": "2026-06-07",
+      "predicted_winner": "ANT",
+      "actual_winner": "ANT",
+      "correct_win": true,
+      "predicted_podium": ["ANT", "VER", "HAM"],
+      "actual_podium": ["ANT", "HAM", "HAD"],
+      "podium_hits": 2,
+      "predicted_top3": [
+        { "driver_code": "ANT", "driver_name": "Kimi Antonelli", "team": "Mercedes", "team_color": "#27F4D2", "win_probability": 0.3850, "podium_probability": 0.6378 },
+        { "driver_code": "VER", "driver_name": "Max Verstappen", "team": "Red Bull Racing", "team_color": "#3671C6", "win_probability": 0.2264, "podium_probability": 0.7713 },
+        { "driver_code": "HAM", "driver_name": "Lewis Hamilton", "team": "Ferrari", "team_color": "#E8002D", "win_probability": 0.1755, "podium_probability": 0.7579 }
+      ],
+      "actual_top3": [
+        { "driver_code": "ANT", "driver_name": "Kimi Antonelli", "team": "Mercedes", "team_color": "#27F4D2" },
+        { "driver_code": "HAM", "driver_name": "Lewis Hamilton", "team": "Ferrari", "team_color": "#E8002D" },
+        { "driver_code": "HAD", "driver_name": "Isack Hadjar", "team": "Red Bull Racing", "team_color": "#3671C6" }
+      ],
+      "updated_at": "2026-06-07T17:00:00.000000+00:00"
     }
   ],
-  "season_winner_accuracy": 0.8,
+  "season_winner_accuracy": 0.8333,
   "season_podium_accuracy": 0.667
 }
