@@ -51,7 +51,12 @@ const FEATURES = [
   {
     name: "Practice Pace Delta",
     weight: "Medium",
-    desc: "Driver's best practice lap (FP3 → FP2 → FP1) vs the session fastest, as a percentage. On sprint weekends where no FP2/FP3 exists, sprint race fastest laps are used instead.",
+    desc: "Driver's race-representative practice pace vs the session fastest, as a percentage. FP2 long-run stints (5+ consecutive clean laps) are used first — these reflect actual race conditions better than single-lap pace. Falls back to FP3 → FP2 → FP1 best lap when long runs aren't available. On sprint weekends, sprint race fastest laps are used instead.",
+  },
+  {
+    name: "Tire Degradation Rate",
+    weight: "Medium",
+    desc: "How much a driver's lap time degrades per lap during FP2 long runs, expressed as % of median lap time per lap. Extracted from the same stints as Practice Pace Delta. Lower = better tire management. A key differentiator on circuits with high degradation (e.g. Barcelona) where 2-stop strategies are the norm.",
   },
   {
     name: "Circuit Historical Average",
@@ -71,7 +76,7 @@ const FEATURES = [
   {
     name: "Career Win & Podium Rate",
     weight: "Medium",
-    desc: "All-time win rate and podium rate from training data. Helps correctly rank drivers who recently changed teams (e.g., Hamilton to Ferrari).",
+    desc: "Recency-weighted win rate and podium rate — recent seasons count more (2026 = 5×, 2025 = 1×, 2024 = 0.5×). Prevents historical dominance from inflating predictions when a team's form has dropped (e.g. McLaren's 2024 championship era doesn't distort 2026 predictions).",
   },
   {
     name: "Constructor Championship Pos.",
@@ -165,7 +170,7 @@ const LIMITATIONS = [
   },
   {
     title: "Qualifying fallback for missing data",
-    desc: "If qualifying data isn't available from the API yet (pre-qualifying weekend), the model uses a driver's historical average grid position. This is less accurate than actual qualifying results and can significantly skew predictions.",
+    desc: "If qualifying data isn't available yet (pre-qualifying weekend), the model uses a driver's historical average grid position. If a driver makes Q3 but doesn't set a time (e.g. crashes on an out-lap), the model uses FP3 pace as a proxy instead of a coarse positional estimate. Both fallbacks are less accurate than actual qualifying results.",
   },
 ];
 
@@ -241,7 +246,7 @@ export default async function ModelPage() {
           <h2 className="font-barlow font-800 text-xl uppercase tracking-wide text-platinum">Feature Engineering</h2>
         </div>
         <p className="font-inter text-xs text-muted mb-4 leading-relaxed">
-          Each row in the training dataset represents one driver in one race. 23 features are computed per driver.
+          Each row in the training dataset represents one driver in one race. 24 features are computed per driver.
           Features with no historical baseline fall back to field averages.
         </p>
         <div className="space-y-1">
