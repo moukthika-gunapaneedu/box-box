@@ -301,10 +301,17 @@ def _driver_features(
         else:
             feats["positions_gained_avg"] = 0.0
 
-        # Career win rate and podium rate — captures all-time ability regardless of team switch
-        total_starts = len(driver_past)
-        feats["career_win_rate"] = float((driver_past["position"] == 1).sum() / total_starts)
-        feats["career_podium_rate"] = float((driver_past["position"] <= 3).sum() / total_starts)
+        # Career win/podium rate — recency-weighted by season so recent form
+        # (e.g. 2026 McLaren struggles) overrides historical dominance (2024 McLaren era).
+        if "season" in driver_past.columns:
+            w = driver_past["season"].map(lambda s: season_weight(s))
+            total_w = w.sum()
+            feats["career_win_rate"] = float((w * (driver_past["position"] == 1)).sum() / total_w) if total_w > 0 else 0.0
+            feats["career_podium_rate"] = float((w * (driver_past["position"] <= 3)).sum() / total_w) if total_w > 0 else 0.0
+        else:
+            total_starts = len(driver_past)
+            feats["career_win_rate"] = float((driver_past["position"] == 1).sum() / total_starts)
+            feats["career_podium_rate"] = float((driver_past["position"] <= 3).sum() / total_starts)
 
         # Recent season form: avg position in most recent complete season only.
         # Better reflects current car performance than multi-year career stats.
