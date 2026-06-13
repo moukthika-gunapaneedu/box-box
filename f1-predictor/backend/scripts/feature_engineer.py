@@ -16,6 +16,7 @@ from collect_data import (
     get_constructor_standings,
     get_driver_standings,
     get_fp_pace,
+    get_fp2_long_run_pace,
     get_race_weather,
 )
 from utils import season_weight, DRIVERS_2026, get_circuit_type, get_overtake_difficulty
@@ -140,15 +141,20 @@ def _build_race_features(
         ((all_results["season"] == year) & (all_results["round"] < round_num))
     ]
 
-    # FP pace: FP3 → FP2 → FP1 → sprint fastest laps (sprint weekends have no FP2/FP3)
+    # FP pace: FP2 long runs (race representative) → FP3 best lap → FP2 best lap → FP1 → sprint
     fp_pace = pd.DataFrame()
-    for session in ("Practice 3", "Practice 2", "Practice 1"):
-        try:
-            fp_pace = get_fp_pace(year, round_num, session)
-            if not fp_pace.empty:
-                break
-        except Exception:
-            pass
+    try:
+        fp_pace = get_fp2_long_run_pace(year, round_num)
+    except Exception:
+        pass
+    if fp_pace.empty:
+        for session in ("Practice 3", "Practice 2", "Practice 1"):
+            try:
+                fp_pace = get_fp_pace(year, round_num, session)
+                if not fp_pace.empty:
+                    break
+            except Exception:
+                pass
     if fp_pace.empty:
         fp_pace = _sprint_pace_df(year, round_num)
 
@@ -264,9 +270,14 @@ def _driver_features(
             driver_time = times[driver_code]
             feats["quali_gap_to_pole_pct"] = (driver_time - pole_time) / pole_time * 100
         else:
-            # Estimate gap from average grid position relative to field size
-            field_size = max(len(quali_df), 20)
-            feats["quali_gap_to_pole_pct"] = (feats["quali_position"] - 1) / field_size * 3.0
+            # Driver in quali but no time set (e.g. Q3 crash before completing a lap).
+            # FP3 pace is a much better proxy than a coarse positional estimate.
+            if not fp_pace_df.empty and driver_code in fp_pace_df["driverCode"].values:
+                fp_row = fp_pace_df[fp_pace_df["driverCode"] == driver_code].iloc[0]
+                feats["quali_gap_to_pole_pct"] = float(fp_row["fp_pace_delta_pct"])
+            else:
+                field_size = max(len(quali_df), 20)
+                feats["quali_gap_to_pole_pct"] = (feats["quali_position"] - 1) / field_size * 3.0
     else:
         field_size = 20
         feats["quali_gap_to_pole_pct"] = (feats["quali_position"] - 1) / field_size * 3.0
@@ -426,14 +437,17 @@ def _driver_features(
         feats["team_race_pace_rank"] = 10.0
         feats["teammate_finish_gap"] = 0.0
 
-    # ---- FP2 pace delta ----
+    # ---- FP2 pace delta + tire degradation ----
     if not fp_pace_df.empty and driver_code in fp_pace_df["driverCode"].values:
         fp_row = fp_pace_df[fp_pace_df["driverCode"] == driver_code].iloc[0]
         feats["fp_pace_delta_pct"] = float(fp_row["fp_pace_delta_pct"])
+        if "fp2_tire_deg_pct" in fp_row.index and pd.notna(fp_row["fp2_tire_deg_pct"]):
+            feats["fp2_tire_deg_pct"] = float(fp_row["fp2_tire_deg_pct"])
+        else:
+            feats["fp2_tire_deg_pct"] = float(fp_pace_df["fp2_tire_deg_pct"].median()) if "fp2_tire_deg_pct" in fp_pace_df.columns else 0.15
     else:
-        # Fall back to team race pace rank converted to a pace estimate,
-        # not quali (which may itself be missing/wrong)
         feats["fp_pace_delta_pct"] = (feats["team_race_pace_rank"] - 1) * 0.15
+        feats["fp2_tire_deg_pct"] = 0.15
 
     # ---- Circuit type (looked up from circuit name, never hardcoded) ----
     circuit_type = race_meta.get("circuit_type") or get_circuit_type(race_meta.get("circuit", ""))
@@ -562,13 +576,18 @@ def build_inference_features(
         quali = pd.DataFrame()
 
     fp_pace = pd.DataFrame()
-    for session in ("Practice 3", "Practice 2", "Practice 1"):
-        try:
-            fp_pace = get_fp_pace(year, round_num, session)
-            if not fp_pace.empty:
-                break
-        except Exception:
-            pass
+    try:
+        fp_pace = get_fp2_long_run_pace(year, round_num)
+    except Exception:
+        pass
+    if fp_pace.empty:
+        for session in ("Practice 3", "Practice 2", "Practice 1"):
+            try:
+                fp_pace = get_fp_pace(year, round_num, session)
+                if not fp_pace.empty:
+                    break
+            except Exception:
+                pass
     if fp_pace.empty:
         fp_pace = _sprint_pace_df(year, round_num)
 
@@ -646,6 +665,7 @@ FEATURE_COLS = [
     "sprint_pace_delta_pct",
     "is_raining",
     "track_temp_celsius",
+    "fp2_tire_deg_pct",
     # circuit_chaos_rate: tested, contributes 0% — removed
     # teammate_finish_gap: tested, +win but -podium, net zero — removed
 ]
