@@ -76,7 +76,7 @@ box-box/
 ### Prediction Pipeline
 
 1. **Data collection**: `collect_data.py` fetches qualifying results, practice pace, pit stop data, standings, and weather from OpenF1 and Jolpica. Responses are cached with MD5-keyed files and configurable TTL. Failed requests retry up to 3 times with exponential backoff.
-2. **Feature engineering**: `feature_engineer.py` builds a 23-feature matrix per driver per race. Temporal guards prevent future data from leaking into training windows.
+2. **Feature engineering**: `feature_engineer.py` builds a 24-feature matrix per driver per race. Temporal guards prevent future data from leaking into training windows.
 3. **Inference**: `predict_race.py` loads the trained models, runs all three, and calibrates output probabilities using temperature scaling (3.0 for wins, 2.0 for podiums). Win probabilities are normalized to sum to 1.0; podium probabilities are normalized to sum to 3.0. If models aren't available, a fallback heuristic scores drivers using qualifying position, recent form, and team pace.
 4. **Output**: predictions are written to `frontend/public/data/predictions.json` and picked up by the static Next.js build.
 5. **Post-race**: `update_history.py` records actual results, compares against predictions, and updates `history.json`. After every 4 completed races, the models retrain on the expanded dataset.
@@ -92,13 +92,14 @@ Each driver-race row is built from:
 | `recent_form_5` | Average finishing position over last 5 races |
 | `recent_season_avg_pos` | Driver's average finish in their most recent complete season |
 | `dnf_rate_10` | DNF rate over last 10 races (DNS/DSQ events excluded) |
-| `career_win_rate` | Career win rate |
-| `career_podium_rate` | Career podium rate |
+| `career_win_rate` | Career win rate, recency-weighted (2026 = 5×, 2025 = 1×, 2024 = 0.5×, 2023 = 0.25×) |
+| `career_podium_rate` | Career podium rate, recency-weighted by season |
 | `circuit_hist_avg` | Driver's avg finish at this circuit with current team only; exponentially recency-weighted; Retired results excluded |
 | `circuit_positions_gained_avg` | Average positions gained grid→finish specifically at this circuit with current team. Separates "finishes well here" from "starts well here" — critical at Monaco-type tracks |
 | `overtake_difficulty` | How easy it is to overtake: higher = more opportunities (Spa/Monza 0.8), lower = grid is destiny (Monaco 0.05, Singapore 0.10). Per-circuit overrides take priority over circuit-type defaults |
 | `team_reliability_score` | Team DNF rate; DNS/DSQ events excluded from denominator |
-| `fp_pace_delta_pct` | Best practice lap gap to session leader as % (FP3→FP2→FP1; sprint lap used on sprint weekends). Falls back to date-based session lookup when round_number is missing from OpenF1 |
+| `fp_pace_delta_pct` | FP2 long-run median pace gap to session leader as % (best stint of 5+ laps, skipping first 2 laps). Falls back to FP3→FP2→FP1 best lap if long-run data is unavailable. Sprint lap used on sprint weekends |
+| `fp2_tire_deg_pct` | Tire degradation rate from FP2 long runs: linear slope of lap times divided by median pace × 100 (% per lap). Higher = more deg. Falls back to 0 if long-run data unavailable |
 | `is_raining` | Wet/dry condition flag |
 | `track_temp_celsius` | Track temperature at race start |
 | `champ_position_norm` | Driver's championship position, normalised 0–1 |
@@ -117,11 +118,11 @@ All three models share similar hyperparameters: 300 estimators, learning rate 0.
 
 | Model | Algorithm | Target | CV Accuracy |
 |---|---|---|---|
-| Win classifier | XGBoost | Race winner | 56.7% |
-| Podium classifier | LightGBM | Top-3 finish | 62.2% |
+| Win classifier | XGBoost | Race winner | 63.9% |
+| Podium classifier | LightGBM | Top-3 finish | 61.2% |
 | Position regressor | XGBoost | Final position | — |
 
-Evaluated across 60 races (2023–2026 historical + 2026 season-to-date) using 4-fold TimeSeriesSplit.
+Evaluated across 61 races (2023–2026 historical + 2026 season-to-date) using 4-fold TimeSeriesSplit.
 
 ---
 
