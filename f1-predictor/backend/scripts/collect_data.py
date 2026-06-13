@@ -339,6 +339,64 @@ def get_fp_pace(year: int, round_num: int, session_type: str = "Practice 2") -> 
     return best
 
 
+def get_fp2_long_run_pace(year: int, round_num: int) -> pd.DataFrame:
+    """
+    Extract race-representative pace and tire degradation from FP2 long runs.
+    A long run is a stint of 5+ consecutive clean laps (no pit-out, no outliers).
+    Returns per driver:
+      fp_pace_delta_pct  — best long-run median, % delta from fastest (lower = faster)
+      fp2_tire_deg_pct   — degradation rate of best long-run, % per lap (lower = better management)
+    Falls back to empty DataFrame if FP2 data or long runs are unavailable.
+    """
+    import numpy as np
+
+    df = get_session_laps(year, round_num, "Practice 2")
+    if df.empty or "lap_duration" not in df.columns:
+        return pd.DataFrame()
+
+    df = df.copy()
+    df["lap_duration"] = pd.to_numeric(df["lap_duration"], errors="coerce")
+    df = df[df["lap_duration"].notna()]
+    df = df[df["is_pit_out_lap"] == False]
+
+    def drop_outliers(g):
+        med = g["lap_duration"].median()
+        return g[g["lap_duration"] <= med * 1.07]
+
+    df = df.groupby("driverCode", group_keys=False).apply(drop_outliers)
+
+    def best_long_run_stats(group):
+        group = group.sort_values("lap_number").reset_index(drop=True)
+        group["stint"] = (group["lap_number"].diff().fillna(1) > 2).cumsum()
+        best_pace, best_deg = None, None
+        for _, stint in group.groupby("stint"):
+            if len(stint) < 5:
+                continue
+            core = stint.iloc[2:]
+            median = core["lap_duration"].median()
+            if best_pace is None or median < best_pace:
+                best_pace = median
+                laps = core["lap_duration"].values
+                slope = np.polyfit(range(len(laps)), laps, 1)[0]
+                # Express as % of median pace per lap — normalises for circuit length
+                best_deg = slope / median * 100
+        return pd.Series({"best_lap_ms": best_pace, "fp2_tire_deg_pct": best_deg})
+
+    result = (
+        df.groupby("driverCode")
+        .apply(best_long_run_stats, include_groups=False)
+        .reset_index()
+    )
+    result = result[result["best_lap_ms"].notna()]
+
+    if result.empty or len(result) < 5:
+        return pd.DataFrame()
+
+    fastest = result["best_lap_ms"].min()
+    result["fp_pace_delta_pct"] = (result["best_lap_ms"] - fastest) / fastest * 100
+    return result[["driverCode", "best_lap_ms", "fp_pace_delta_pct", "fp2_tire_deg_pct"]]
+
+
 def get_weather_forecast(session_key: int) -> dict:
     """Return latest weather reading for a session."""
     weather = get_openf1_weather(session_key)
