@@ -138,7 +138,30 @@
       ],
       "updated_at": "2026-06-07T17:00:00.000000+00:00"
     }
+    {
+      "round": 7,
+      "race": "Spanish Grand Prix",
+      "circuit": "Circuit de Barcelona-Catalunya",
+      "race_date": "2026-06-14",
+      "predicted_winner": "HAM",
+      "actual_winner": "HAM",
+      "correct_win": true,
+      "predicted_podium": ["HAM", "RUS", "ANT"],
+      "actual_podium": ["HAM", "RUS", "NOR"],
+      "podium_hits": 2,
+      "predicted_top3": [
+        { "driver_code": "HAM", "driver_name": "Lewis Hamilton", "team": "Ferrari", "team_color": "#E8002D", "win_probability": 0.2642, "podium_probability": 0.3932 },
+        { "driver_code": "RUS", "driver_name": "George Russell", "team": "Mercedes", "team_color": "#27F4D2", "win_probability": 0.2447, "podium_probability": 0.2492 },
+        { "driver_code": "ANT", "driver_name": "Kimi Antonelli", "team": "Mercedes", "team_color": "#27F4D2", "win_probability": 0.1564, "podium_probability": 0.3822 }
+      ],
+      "actual_top3": [
+        { "driver_code": "HAM", "driver_name": "Lewis Hamilton", "team": "Ferrari", "team_color": "#E8002D" },
+        { "driver_code": "RUS", "driver_name": "George Russell", "team": "Mercedes", "team_color": "#27F4D2" },
+        { "driver_code": "NOR", "driver_name": "Lando Norris", "team": "McLaren", "team_color": "#FF8000" }
+      ],
+      "updated_at": "2026-06-14T15:00:00.000000+00:00"
+    }
   ],
-  "season_winner_accuracy": 0.8333,
+  "season_winner_accuracy": 0.857,
   "season_podium_accuracy": 0.667
 }
