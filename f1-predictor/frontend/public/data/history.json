@@ -124,7 +124,7 @@
       "actual_winner": "ANT",
       "correct_win": true,
       "predicted_podium": ["ANT", "VER", "HAM"],
-      "actual_podium": ["ANT", "HAM", "HAD"],
+      "actual_podium": ["ANT", "HAM", "GAS"],
       "podium_hits": 2,
       "predicted_top3": [
         { "driver_code": "ANT", "driver_name": "Kimi Antonelli", "team": "Mercedes", "team_color": "#27F4D2", "win_probability": 0.3850, "podium_probability": 0.6378 },
@@ -134,7 +134,7 @@
       "actual_top3": [
         { "driver_code": "ANT", "driver_name": "Kimi Antonelli", "team": "Mercedes", "team_color": "#27F4D2" },
         { "driver_code": "HAM", "driver_name": "Lewis Hamilton", "team": "Ferrari", "team_color": "#E8002D" },
-        { "driver_code": "HAD", "driver_name": "Isack Hadjar", "team": "Red Bull Racing", "team_color": "#3671C6" }
+        { "driver_code": "GAS", "driver_name": "Pierre Gasly", "team": "Alpine", "team_color": "#FF87BC" }
       ],
       "updated_at": "2026-06-07T17:00:00.000000+00:00"
     },
