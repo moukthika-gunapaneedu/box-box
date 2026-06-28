@@ -14,9 +14,15 @@ const DATA_SOURCES = [
     tag: "Historical",
   },
   {
+    name: "FastF1",
+    url: "docs.fastf1.dev",
+    desc: "Primary source for FP2 long-run race pace. Provides clean stint IDs and proper pit-stop detection, eliminating the false long-run artifacts that occur in raw lap feeds. Used for both training (2023–2026) and inference.",
+    tag: "Primary FP2",
+  },
+  {
     name: "OpenF1 API",
     url: "openf1.org",
-    desc: "Real-time session data: practice lap times, sprint fastest laps, live race weather (temperature, rainfall). Used for pace delta features and race-day conditions once the session is live.",
+    desc: "Fallback source for practice lap times when FastF1 is unavailable. Also used for live race weather (temperature, rainfall) once the session is live.",
     tag: "Real-time",
   },
   {

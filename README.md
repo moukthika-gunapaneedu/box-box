@@ -11,7 +11,7 @@ An AI-powered Formula 1 race prediction platform for the 2026 season. Box-box co
 ## Features
 
 - **Three-model ensemble**: XGBoost win classifier, LightGBM podium classifier, XGBoost position regressor
-- **Live data integration**: qualifying results, practice pace, and pit stop data from OpenF1 and Jolpica/Ergast APIs
+- **Live data integration**: qualifying results and race results from Jolpica/Ergast; FP2 long-run race pace from FastF1 (primary) with OpenF1 as fallback; weather forecasts from Open-Meteo
 - **Advanced feature engineering**: grid position, 5-race rolling form, team pace ranking, circuit-specific performance, overtaking tendency, and reliability scores
 - **Confidence scoring**: High/Medium/Low confidence with human-readable factors ("Starting from pole", "Excellent recent form")
 - **Sprint race features**: sprint finishing position, sprint vs qualifying position delta, and sprint pace gap are included as training features on sprint weekends
@@ -28,7 +28,7 @@ An AI-powered Formula 1 race prediction platform for the 2026 season. Box-box co
 |---|---|
 | Frontend | Next.js 15, React 18, TypeScript, TailwindCSS, Recharts, Framer Motion, Radix UI |
 | Backend | Python 3.11, XGBoost, LightGBM, scikit-learn, pandas |
-| Data | OpenF1 API, Jolpica (Ergast replacement) |
+| Data | FastF1, OpenF1 API, Jolpica (Ergast replacement), Open-Meteo |
 | Deploy | GitHub Pages + GitHub Actions |
 
 ---
@@ -75,7 +75,7 @@ box-box/
 
 ### Prediction Pipeline
 
-1. **Data collection**: `collect_data.py` fetches qualifying results, practice pace, pit stop data, standings, and weather from OpenF1 and Jolpica. Responses are cached with MD5-keyed files and configurable TTL. Failed requests retry up to 3 times with exponential backoff.
+1. **Data collection**: `collect_data.py` fetches qualifying results, standings, and weather from Jolpica and OpenF1. FP2 long-run race pace is extracted via FastF1 (primary — clean stint IDs and proper pit-stop detection) with OpenF1 raw laps as fallback. Responses are cached with MD5-keyed files and configurable TTL. Failed requests retry up to 3 times with exponential backoff.
 2. **Feature engineering**: `feature_engineer.py` builds a 24-feature matrix per driver per race. Temporal guards prevent future data from leaking into training windows.
 3. **Inference**: `predict_race.py` loads the trained models, runs all three, and calibrates output probabilities using temperature scaling (3.0 for wins, 2.0 for podiums). Win probabilities are normalized to sum to 1.0; podium probabilities are normalized to sum to 3.0. If models aren't available, a fallback heuristic scores drivers using qualifying position, recent form, and team pace.
 4. **Output**: predictions are written to `frontend/public/data/predictions.json` and picked up by the static Next.js build.
@@ -98,7 +98,7 @@ Each driver-race row is built from:
 | `circuit_positions_gained_avg` | Average positions gained grid→finish specifically at this circuit with current team. Separates "finishes well here" from "starts well here" — critical at Monaco-type tracks |
 | `overtake_difficulty` | How easy it is to overtake: higher = more opportunities (Spa/Monza 0.8), lower = grid is destiny (Monaco 0.05, Singapore 0.10). Per-circuit overrides take priority over circuit-type defaults |
 | `team_reliability_score` | Team DNF rate; DNS/DSQ events excluded from denominator |
-| `fp_pace_delta_pct` | FP2 long-run median pace gap to session leader as % (best stint of 5+ laps, skipping first 2 laps). Falls back to FP3→FP2→FP1 best lap if long-run data is unavailable. Sprint lap used on sprint weekends |
+| `fp_pace_delta_pct` | FP2 long-run median pace gap to session leader as % (best stint of 5+ laps, skipping first 2 laps). Sourced from FastF1 for clean stint detection; falls back to OpenF1 raw laps, then FP3→FP2→FP1 best lap. Sprint lap used on sprint weekends |
 | `fp2_tire_deg_pct` | Tire degradation rate from FP2 long runs: linear slope of lap times divided by median pace × 100 (% per lap). Higher = more deg. Falls back to 0 if long-run data unavailable |
 | `is_raining` | Wet/dry condition flag |
 | `track_temp_celsius` | Track temperature at race start |
@@ -118,11 +118,11 @@ All three models share similar hyperparameters: 300 estimators, learning rate 0.
 
 | Model | Algorithm | Target | CV Accuracy |
 |---|---|---|---|
-| Win classifier | XGBoost | Race winner | 63.9% |
-| Podium classifier | LightGBM | Top-3 finish | 61.2% |
+| Win classifier | XGBoost | Race winner | 62.9% |
+| Podium classifier | LightGBM | Top-3 finish | 61.3% |
 | Position regressor | XGBoost | Final position | — |
 
-Evaluated across 61 races (2023–2026 historical + 2026 season-to-date) using 4-fold TimeSeriesSplit.
+Evaluated across 62 races (2023–2026 historical + 2026 season-to-date) using 4-fold TimeSeriesSplit.
 
 ---
 
