@@ -491,15 +491,7 @@ def get_fp2_long_run_pace(year: int, round_num: int) -> pd.DataFrame:
     except Exception:
         pass
 
-    # Sprint weekend fallback: FP1 long runs (teams do race simulations in FP1 on sprint
-    # weekends since there is no FP2/FP3 — gives real tire deg with correct sign)
-    try:
-        return _long_run_from_session_fastf1(year, round_num, "FP1", min_stint_laps=5)
-    except Exception:
-        pass
-
-    # Sprint race laps fallback: real race-condition pace (deg omitted — track rubbering-in
-    # produces negative slopes in a 17-lap sprint, which is track evolution not tire wear)
+    # Sprint weekend fallback: sprint race laps give real race-condition pace
     try:
         return _fp2_long_run_from_sprint_fastf1(year, round_num)
     except Exception:
