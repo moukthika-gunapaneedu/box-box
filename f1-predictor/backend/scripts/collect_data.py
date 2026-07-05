@@ -339,11 +339,11 @@ def get_fp_pace(year: int, round_num: int, session_type: str = "Practice 2") -> 
     return best
 
 
-def _fp2_long_run_fastf1(year: int, round_num: int) -> pd.DataFrame:
+def _long_run_from_session_fastf1(year: int, round_num: int, session_name: str, min_stint_laps: int = 5) -> pd.DataFrame:
     """
-    Extract FP2 long-run pace via FastF1, which provides clean stint IDs and
-    proper pit-stop detection. Returns same schema as get_fp2_long_run_pace.
-    Raises on any failure so the caller can fall back to OpenF1.
+    Extract long-run pace and tire degradation from any FastF1 practice session.
+    Shared by FP2 (normal weekends) and FP1 (sprint weekends, where teams do race sims).
+    Raises on any failure so the caller can fall back.
     """
     import numpy as np
     import fastf1
@@ -354,19 +354,17 @@ def _fp2_long_run_fastf1(year: int, round_num: int) -> pd.DataFrame:
     cache_dir.mkdir(parents=True, exist_ok=True)
     fastf1.Cache.enable_cache(str(cache_dir))
 
-    session = fastf1.get_session(year, round_num, "FP2")
+    session = fastf1.get_session(year, round_num, session_name)
     session.load(laps=True, telemetry=False, weather=False, messages=False)
     laps = session.laps
 
     if laps.empty:
-        raise ValueError("FastF1 returned empty laps")
+        raise ValueError(f"FastF1 returned empty laps for {session_name}")
 
-    # Convert LapTime Timedelta → seconds float
     laps = laps.copy()
     laps["lap_duration"] = laps["LapTime"].dt.total_seconds()
     laps = laps.rename(columns={"Driver": "driverCode", "LapNumber": "lap_number", "Stint": "stint_id"})
 
-    # Drop pit-out laps (first lap of each stint)
     laps = laps[laps["PitOutTime"].isna()]
     laps = laps.dropna(subset=["lap_duration"])
 
@@ -379,7 +377,7 @@ def _fp2_long_run_fastf1(year: int, round_num: int) -> pd.DataFrame:
     def best_long_run_stats(group):
         best_pace, best_deg = None, None
         for _, stint in group.groupby("stint_id"):
-            if len(stint) < 5:
+            if len(stint) < min_stint_laps:
                 continue
             core = stint.sort_values("lap_number").iloc[2:]
             median = core["lap_duration"].median()
@@ -398,7 +396,77 @@ def _fp2_long_run_fastf1(year: int, round_num: int) -> pd.DataFrame:
     result = result[result["best_lap_ms"].notna()]
 
     if result.empty or len(result) < 5:
-        raise ValueError("Insufficient long-run data from FastF1")
+        raise ValueError(f"Insufficient long-run data from {session_name}")
+
+    fastest = result["best_lap_ms"].min()
+    result["fp_pace_delta_pct"] = (result["best_lap_ms"] - fastest) / fastest * 100
+    return result[["driverCode", "best_lap_ms", "fp_pace_delta_pct", "fp2_tire_deg_pct"]]
+
+
+def _fp2_long_run_fastf1(year: int, round_num: int) -> pd.DataFrame:
+    return _long_run_from_session_fastf1(year, round_num, "FP2", min_stint_laps=5)
+
+
+def _fp2_long_run_from_sprint_fastf1(year: int, round_num: int) -> pd.DataFrame:
+    """
+    Sprint weekend fallback: use sprint race laps as race-representative pace proxy.
+    Sprint laps are actual race-condition data — far better than FP1 best laps.
+    Uses a relaxed minimum stint length of 3 (sprint is only 17 laps).
+    Raises on any failure so the caller can fall back further.
+    """
+    import numpy as np
+    import fastf1
+    import warnings
+    warnings.filterwarnings("ignore")
+
+    cache_dir = Path(__file__).parent.parent / "data" / "fastf1_cache"
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    fastf1.Cache.enable_cache(str(cache_dir))
+
+    session = fastf1.get_session(year, round_num, "Sprint")
+    session.load(laps=True, telemetry=False, weather=False, messages=False)
+    laps = session.laps
+
+    if laps.empty:
+        raise ValueError("FastF1 returned empty sprint laps")
+
+    laps = laps.copy()
+    laps["lap_duration"] = laps["LapTime"].dt.total_seconds()
+    laps = laps.rename(columns={"Driver": "driverCode", "LapNumber": "lap_number", "Stint": "stint_id"})
+
+    # Drop pit-out laps and SC/VSC-influenced laps (>10% over median)
+    laps = laps[laps["PitOutTime"].isna()]
+    laps = laps.dropna(subset=["lap_duration"])
+
+    def drop_outliers(g):
+        med = g["lap_duration"].median()
+        return g[g["lap_duration"] <= med * 1.10]
+
+    laps = laps.groupby("driverCode", group_keys=False).apply(drop_outliers)
+
+    def best_long_run_stats(group):
+        best_pace, best_deg = None, None
+        for _, stint in group.groupby("stint_id"):
+            if len(stint) < 3:  # relaxed from 5 — sprint races are only 17 laps
+                continue
+            core = stint.sort_values("lap_number").iloc[1:]  # drop first outlap
+            median = core["lap_duration"].median()
+            if best_pace is None or median < best_pace:
+                best_pace = median
+                times = core["lap_duration"].values
+                slope = np.polyfit(range(len(times)), times, 1)[0] if len(times) >= 2 else 0.0
+                best_deg = slope / median * 100
+        return pd.Series({"best_lap_ms": best_pace, "fp2_tire_deg_pct": best_deg})
+
+    result = (
+        laps.groupby("driverCode")
+        .apply(best_long_run_stats, include_groups=False)
+        .reset_index()
+    )
+    result = result[result["best_lap_ms"].notna()]
+
+    if result.empty or len(result) < 5:
+        raise ValueError("Insufficient sprint long-run data from FastF1")
 
     fastest = result["best_lap_ms"].min()
     result["fp_pace_delta_pct"] = (result["best_lap_ms"] - fastest) / fastest * 100
@@ -408,21 +476,36 @@ def _fp2_long_run_fastf1(year: int, round_num: int) -> pd.DataFrame:
 def get_fp2_long_run_pace(year: int, round_num: int) -> pd.DataFrame:
     """
     Extract race-representative pace and tire degradation from FP2 long runs.
-    Primary source: FastF1 (clean stint IDs, proper pit detection).
-    Fallback: OpenF1 raw laps with manual stint detection.
+    Primary source: FastF1 FP2 (clean stint IDs, proper pit detection).
+    Sprint fallback: FastF1 sprint race laps (real race-condition data, better than FP1 best laps).
+    Final fallback: OpenF1 raw laps with manual stint detection.
     Returns per driver:
       fp_pace_delta_pct  — best long-run median, % delta from fastest (lower = faster)
       fp2_tire_deg_pct   — degradation rate of best long-run, % per lap (lower = better management)
     """
     import numpy as np
 
-    # Try FastF1 first — cleaner data, proper stint detection
+    # Try FastF1 FP2 first — cleaner data, proper stint detection
     try:
         return _fp2_long_run_fastf1(year, round_num)
     except Exception:
         pass
 
-    # Fallback: OpenF1 raw laps
+    # Sprint weekend fallback: FP1 long runs (teams do race simulations in FP1 on sprint
+    # weekends since there is no FP2/FP3 — gives real tire deg with correct sign)
+    try:
+        return _long_run_from_session_fastf1(year, round_num, "FP1", min_stint_laps=5)
+    except Exception:
+        pass
+
+    # Sprint race laps fallback: real race-condition pace (deg omitted — track rubbering-in
+    # produces negative slopes in a 17-lap sprint, which is track evolution not tire wear)
+    try:
+        return _fp2_long_run_from_sprint_fastf1(year, round_num)
+    except Exception:
+        pass
+
+    # Final fallback: OpenF1 raw laps
     df = get_session_laps(year, round_num, "Practice 2")
     if df.empty or "lap_duration" not in df.columns:
         return pd.DataFrame()
