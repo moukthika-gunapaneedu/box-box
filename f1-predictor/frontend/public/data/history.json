@@ -184,8 +184,31 @@
         { "driver_code": "ANT", "driver_name": "Kimi Antonelli", "team": "Mercedes", "team_color": "#27F4D2" }
       ],
       "updated_at": "2026-06-29T06:00:00.000000+00:00"
+    },
+    {
+      "round": 9,
+      "race": "British Grand Prix",
+      "circuit": "Silverstone Circuit",
+      "race_date": "2026-07-05",
+      "predicted_winner": "ANT",
+      "actual_winner": "LEC",
+      "correct_win": false,
+      "predicted_podium": ["ANT", "RUS", "HAM"],
+      "actual_podium": ["LEC", "RUS", "HAM"],
+      "podium_hits": 2,
+      "predicted_top3": [
+        { "driver_code": "ANT", "driver_name": "Kimi Antonelli", "team": "Mercedes", "team_color": "#27F4D2", "win_probability": 0.3135, "podium_probability": 0.7634 },
+        { "driver_code": "RUS", "driver_name": "George Russell", "team": "Mercedes", "team_color": "#27F4D2", "win_probability": 0.195, "podium_probability": 0.6628 },
+        { "driver_code": "HAM", "driver_name": "Lewis Hamilton", "team": "Ferrari", "team_color": "#E8002D", "win_probability": 0.1002, "podium_probability": 0.3074 }
+      ],
+      "actual_top3": [
+        { "driver_code": "LEC", "driver_name": "Charles Leclerc", "team": "Ferrari", "team_color": "#E8002D" },
+        { "driver_code": "RUS", "driver_name": "George Russell", "team": "Mercedes", "team_color": "#27F4D2" },
+        { "driver_code": "HAM", "driver_name": "Lewis Hamilton", "team": "Ferrari", "team_color": "#E8002D" }
+      ],
+      "updated_at": "2026-07-06T00:00:00.000000+00:00"
     }
   ],
-  "season_winner_accuracy": 0.875,
+  "season_winner_accuracy": 0.778,
   "season_podium_accuracy": 0.667
 }
