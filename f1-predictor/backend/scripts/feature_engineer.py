@@ -18,6 +18,7 @@ from collect_data import (
     get_fp_pace,
     get_fp2_long_run_pace,
     get_race_weather,
+    get_grid_overrides,
 )
 from utils import season_weight, DRIVERS_2026, get_circuit_type, get_overtake_difficulty
 
@@ -190,6 +191,14 @@ def _build_race_features(
     except Exception:
         weather_dict = {"is_raining": 0, "track_temp_celsius": 30.0}
 
+    # Actual post-penalty starting grid for this race (already correct in
+    # historical results — no override file needed, unlike inference).
+    actual_grid_map = {
+        row["driverCode"]: int(row["grid"])
+        for _, row in race_results.iterrows()
+        if row.get("grid", 0) and row["grid"] > 0
+    }
+
     rows = []
     for _, race_row in race_results.iterrows():
         code = race_row["driverCode"]
@@ -205,6 +214,7 @@ def _build_race_features(
             con_standings_df=con_standings,
             weather_dict=weather_dict,
             sprint_df=sprint_results,
+            grid_override=actual_grid_map,
         )
         feats["season"] = year
         feats["round"] = round_num
@@ -232,6 +242,7 @@ def _driver_features(
     con_standings_df: pd.DataFrame = pd.DataFrame(),
     weather_dict: dict | None = None,
     sprint_df: pd.DataFrame = pd.DataFrame(),
+    grid_override: dict[str, int] | None = None,
 ) -> dict:
     """Compute all features for a single driver in a single race."""
     feats: dict = {"driverCode": driver_code}
@@ -261,6 +272,13 @@ def _driver_features(
             feats["quali_position"] = int(len(quali_df)) + 1
     else:
         feats["quali_position"] = quali_fallback
+
+    # Post-penalty starting grid overrides raw qualifying classification when known.
+    # Training gets this from actual historical results (always correct); inference
+    # gets it from a manually-maintained overrides file (only present when a penalty
+    # is known ahead of the race). Absent -> raw qualifying position stands, unchanged.
+    if grid_override and driver_code in grid_override:
+        feats["quali_position"] = int(grid_override[driver_code])
 
     # Qualifying gap to pole (percentage)
     if not quali_df.empty and "best_time" in quali_df.columns:
@@ -626,6 +644,8 @@ def build_inference_features(
     except Exception:
         weather_dict = {"is_raining": 0, "track_temp_celsius": 30.0}
 
+    grid_override = get_grid_overrides(year, round_num)
+
     rows = []
     for code in drivers:
         feats = _driver_features(
@@ -640,6 +660,7 @@ def build_inference_features(
             con_standings_df=con_standings,
             weather_dict=weather_dict,
             sprint_df=sprint_results,
+            grid_override=grid_override,
         )
         feats["season"] = year
         feats["round"] = round_num

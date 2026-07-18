@@ -3,6 +3,7 @@ f1-predictor/frontend/.next/
 f1-predictor/frontend/out/
 f1-predictor/backend/__pycache__/
 f1-predictor/backend/data/cache/
+f1-predictor/backend/data/fastf1_cache/
 *.pyc
 *.pkl
 .DS_Store

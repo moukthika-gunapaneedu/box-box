@@ -1,5 +1,7 @@
 {
-  "winner_accuracy": 0.651,
+  "winner_accuracy": 0.667,
   "podium_accuracy": 0.667,
+  "position_mae": 3.166,
+  "position_mae_grid_baseline": 3.327,
   "total_races_evaluated": 63
 }

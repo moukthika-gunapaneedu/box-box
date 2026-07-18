@@ -182,6 +182,29 @@ def get_race_calendar(year: int) -> list[dict]:
         return []
 
 
+def get_grid_overrides(year: int, round_num: int) -> dict[str, int]:
+    """
+    Manually-maintained post-penalty starting grid for an upcoming race.
+
+    Qualifying classification != starting grid whenever grid penalties are
+    applied (battery/PU changes, impeding, etc). There's no free structured
+    API that publishes the FIA-adjusted grid before lights out, so this file
+    has to be updated by hand from race-weekend news once penalties are
+    confirmed (usually Saturday evening). Empty/missing round -> no known
+    penalties, callers fall back to raw qualifying position.
+
+    File format: {"<year>": {"<round>": {"<driverCode>": <grid_position>, ...}}}
+    """
+    path = Path(__file__).parent.parent / "data" / "grid_penalty_overrides.json"
+    if not path.exists():
+        return {}
+    try:
+        data = json.loads(path.read_text())
+        return data.get(str(year), {}).get(str(round_num), {})
+    except (json.JSONDecodeError, OSError):
+        return {}
+
+
 def get_driver_standings(year: int, round_num: int | None = None) -> pd.DataFrame:
     """Driver standings at a given point in the season."""
     url = f"{JOLPICA_BASE}/{year}/driverStandings.json"

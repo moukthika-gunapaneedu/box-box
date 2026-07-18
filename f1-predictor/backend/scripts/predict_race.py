@@ -149,8 +149,27 @@ def predict(round_num: int | None = None) -> dict:
 
     # Normalize win probabilities to sum to 1, then apply temperature scaling
     # to prevent one driver dominating with 80-90%+ (uncalibrated model artefact).
-    # T=3 spreads the distribution while preserving relative ranking.
-    WIN_TEMP = 3.0
+    # T=3 was an unvalidated guess. Replaced 2026-07-18 after: (1) log-loss vs
+    # actual winners on the 63-race CV holdout is minimized at T~1.3 (log-loss
+    # 1.334 vs 1.776 at T=3) and stays minimized under season-recency
+    # reweighting; (2) a 200-resample bootstrap of that fit gives a stable
+    # estimate (median 1.30, std 0.14, 90% CI [1.10, 1.50]) that NEVER supports
+    # T>=2.5 in any resample; (3) an isotonic-regression cross-check (a more
+    # flexible, non-parametric calibration) agrees directionally and achieves
+    # even better log-loss (1.165); (4) the reliability diagram at T=1.3 is
+    # well-calibrated through most of the range, with mild overconfidence only
+    # in the top bucket (76.7% predicted vs 66.7% empirical, n=12 — small, but
+    # the only real caution flag found). T=1.5 sits deliberately above the
+    # fitted optimum (1.3) as a conservative margin for that caution, while
+    # still being solidly evidence-based rather than guessed. Note T can never
+    # affect winner_accuracy/podium_accuracy either way — raising probabilities
+    # to a power is order-preserving — so those ranking metrics can't validate
+    # this value; the reliability diagram is what does. Isotonic regression
+    # would calibrate magnitude even better but reintroduces the same flat-tail
+    # ranking problem the grid-position blend below already fixes (it's also
+    # monotonic in the raw score, with no notion of grid position) — combining
+    # the two properly is a real follow-up, not a same-night change.
+    WIN_TEMP = 1.5
     win_probs = np.array(win_probs, dtype=float)
     win_probs = np.clip(win_probs, 1e-9, 1)
     win_probs = win_probs / win_probs.sum()
@@ -160,7 +179,10 @@ def predict(round_num: int | None = None) -> dict:
     # Normalize podium probabilities: exactly 3 podium spots exist, so the sum
     # of all drivers' podium probabilities must equal 3.0. Without this, the
     # uncalibrated LGB model hands out inflated probabilities to everyone.
-    POD_TEMP = 2.0
+    # T fit the same way as WIN_TEMP; the original guess of 2.0 was already
+    # close to the fitted optimum (~1.8, log-loss 0.2147 vs 0.2155 at 2.0) —
+    # much smaller miscalibration than the win model had.
+    POD_TEMP = 1.8
     pod_probs = np.array(pod_probs, dtype=float)
     pod_probs = np.clip(pod_probs, 1e-9, 1)
     pod_probs = pod_probs / pod_probs.sum()
@@ -214,17 +236,10 @@ def predict(round_num: int | None = None) -> dict:
     for rank, r in enumerate(results_by_pos, 1):
         r["predicted_finish"] = float(rank)
 
-    # Overlay actual qualifying grid positions for display (model predictions unchanged).
-    # If qualifying happened but a driver is absent (crashed/excluded), they go last.
-    try:
-        actual_quali = get_qualifying_results(CURRENT_SEASON, round_num)
-        if not actual_quali.empty:
-            last_pos = int(len(actual_quali)) + 1
-            quali_map = dict(zip(actual_quali["driverCode"], actual_quali["quali_position"].astype(int)))
-            for r in results:
-                r["quali_position"] = quali_map.get(r["driver_code"], last_pos)
-    except Exception:
-        pass  # keep model-derived positions if API unavailable
+    # NOTE: quali_position on each result already reflects the actual post-penalty
+    # starting grid (see feature_engineer.get_grid_overrides) — do not re-overlay
+    # from raw qualifying classification here, that's the same unadjusted source
+    # and will silently undo grid-penalty corrections.
 
     # Season accuracy from history
     history = _load_history()
@@ -259,32 +274,71 @@ def predict(round_num: int | None = None) -> dict:
 
 def _apply_grid_lock_calibration(results: list, overtake_difficulty: float) -> list:
     """
-    Blend model probabilities toward historical grid-position base rates for circuits
-    where overtaking is near-impossible. The model's general form/pace signals dominate
-    Monaco/Singapore training examples (only 3-4 per circuit), producing backwards outputs
-    like P7 having higher podium odds than P2.
+    Blend model probabilities toward historical grid-position base rates.
 
-    Blend weight scales linearly: 0 at overtake_difficulty=0.15, ~0.65 at Monaco (0.05).
-    Base rates derived from 4 Monaco + 4 Singapore races (2022-2025).
+    Confirmed by direct sensitivity testing (2026-07-18, R10 Belgian GP prep): the
+    trained xgb_win model's raw output is completely flat with respect to
+    quali_position past ~P8 (identical prediction whether a driver starts P8 or
+    P21) — max_depth=4 combined with few training examples of "strong team,
+    deep grid slot" means the trees never learned to split further down the
+    grid. Past that point the ranking is driven entirely by team/career
+    features, so a backmarker on a fast team (e.g. a penalised front-runner)
+    outranks a genuinely quicker midfield car at the same grid slot. This
+    isn't Monaco-specific — it's a general model capacity limit — so unlike
+    the original version of this function, calibration is no longer gated off
+    entirely for high-overtake circuits; it just blends in a lot less there.
+
+    Two tiers:
+      - overtake_difficulty < 0.15 (Monaco/Singapore-style): blend heavily
+        toward hand-tuned priors derived from actual Monaco+Singapore races
+        (2022-2025) — grid position there is close to deterministic, and the
+        general all-circuit table below would be too soft for those tracks.
+      - overtake_difficulty >= 0.15 (everywhere else): blend lightly toward
+        GRID_WIN_PRIOR_GENERAL/GRID_POD_PRIOR_GENERAL, empirical win/podium
+        rates by grid position across all 2023-2026 races (1596 driver-rows),
+        isotonically smoothed (monotonic non-increasing) and floored so a
+        deep-grid driver is suppressed but never literally zeroed out.
     """
     GRID_LOCK_THRESHOLD = 0.15
-    if overtake_difficulty >= GRID_LOCK_THRESHOLD:
-        return results
 
-    blend = (GRID_LOCK_THRESHOLD - overtake_difficulty) / GRID_LOCK_THRESHOLD  # 0.05 → ~0.67
-
-    # Historical podium rates by grid position across Monaco/Singapore 2022-2025.
+    # Hand-tuned Monaco/Singapore priors (unchanged from original).
     # P1: 75% (pole DNF once, 2022 LEC), P2/P3: 100%, P4: 25% (VER 2022 only), P5+: ~0%.
-    GRID_POD_PRIOR = {1: 0.75, 2: 0.95, 3: 0.95, 4: 0.20, 5: 0.04, 6: 0.02}
-    GRID_WIN_PRIOR = {1: 0.42, 2: 0.28, 3: 0.18, 4: 0.06, 5: 0.02, 6: 0.01}
+    GRID_POD_PRIOR_MONACO = {1: 0.75, 2: 0.95, 3: 0.95, 4: 0.20, 5: 0.04, 6: 0.02}
+    GRID_WIN_PRIOR_MONACO = {1: 0.42, 2: 0.28, 3: 0.18, 4: 0.06, 5: 0.02, 6: 0.01}
+
+    # Empirical, all-circuit win/podium rate by grid position (2023-2026, 1596 rows),
+    # isotonically smoothed and floored (win >= 0.003, podium >= 0.01) so it never
+    # forces a hard zero. Recompute from data/training_features.parquet if the
+    # underlying dataset changes materially.
+    GRID_WIN_PRIOR_GENERAL = {
+        1: 0.595, 2: 0.215, 3: 0.089, 4: 0.038, 5: 0.013, 6: 0.013, 7: 0.003,
+    }
+    GRID_POD_PRIOR_GENERAL = {
+        1: 0.823, 2: 0.734, 3: 0.468, 4: 0.392, 5: 0.215, 6: 0.101, 7: 0.063,
+    }
+    WIN_FLOOR_GENERAL, POD_FLOOR_GENERAL = 0.003, 0.01
+
+    if overtake_difficulty < GRID_LOCK_THRESHOLD:
+        blend = (GRID_LOCK_THRESHOLD - overtake_difficulty) / GRID_LOCK_THRESHOLD  # 0.05 → ~0.67
+        pod_prior, win_prior = GRID_POD_PRIOR_MONACO, GRID_WIN_PRIOR_MONACO
+        pod_default, win_default = 0.003, 0.002
+    else:
+        # Tapers from 0.20 at the threshold down to 0.06 at the highest overtake
+        # difficulty in use (0.8, high_speed circuits like Spa/Monza).
+        BLEND_MAX, BLEND_MIN, OD_MAX = 0.20, 0.06, 0.8
+        span = max(OD_MAX - GRID_LOCK_THRESHOLD, 1e-9)
+        frac = min(max((overtake_difficulty - GRID_LOCK_THRESHOLD) / span, 0.0), 1.0)
+        blend = BLEND_MAX - (BLEND_MAX - BLEND_MIN) * frac
+        pod_prior, win_prior = GRID_POD_PRIOR_GENERAL, GRID_WIN_PRIOR_GENERAL
+        pod_default, win_default = POD_FLOOR_GENERAL, WIN_FLOOR_GENERAL
 
     for r in results:
         gp = r["quali_position"]
         r["podium_probability"] = (
-            (1 - blend) * r["podium_probability"] + blend * GRID_POD_PRIOR.get(gp, 0.003)
+            (1 - blend) * r["podium_probability"] + blend * pod_prior.get(gp, pod_default)
         )
         r["win_probability"] = (
-            (1 - blend) * r["win_probability"] + blend * GRID_WIN_PRIOR.get(gp, 0.002)
+            (1 - blend) * r["win_probability"] + blend * win_prior.get(gp, win_default)
         )
 
     # Re-normalise: win probs sum to 1, podium probs sum to 3
@@ -294,9 +348,24 @@ def _apply_grid_lock_calibration(results: list, overtake_difficulty: float) -> l
         r["win_probability"] = round(r["win_probability"] / win_sum, 4)
         r["podium_probability"] = round(min(0.99, r["podium_probability"] / pod_sum * 3.0), 4)
 
-    # Re-enforce podium >= win constraint after calibration
+    # Re-enforce podium >= win constraint after calibration. Bumping any row up
+    # to its win floor breaks the sum-to-3 invariant from the renormalisation
+    # above, so rescale only the slack (podium - win) proportionally to bring
+    # the total back to exactly 3.0 — every row stays >= its win floor since
+    # slack is clamped non-negative before scaling. (This bug pre-dates this
+    # calibration extension — the original single-pass max() could already
+    # push the sum over 3.0 — surfaced now because a fitted win temperature
+    # widens the gap between a strong favourite's win and podium values.)
     for r in results:
         r["podium_probability"] = max(r["podium_probability"], r["win_probability"])
+    win_total = sum(r["win_probability"] for r in results)
+    slack_total = sum(r["podium_probability"] - r["win_probability"] for r in results)
+    target_slack = 3.0 - win_total
+    if slack_total > 1e-9:
+        scale = target_slack / slack_total
+        for r in results:
+            slack = max(r["podium_probability"] - r["win_probability"], 0.0)
+            r["podium_probability"] = round(r["win_probability"] + slack * scale, 4)
 
     return results
 
