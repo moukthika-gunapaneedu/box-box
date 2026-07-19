@@ -37,7 +37,7 @@ const FEATURES = [
   {
     name: "Qualifying Position",
     weight: "High",
-    desc: "Actual grid position from qualifying. If a driver crashed or was excluded, they're assigned last place.",
+    desc: "Actual starting grid position — not just the raw qualifying classification. When grid penalties apply (e.g. power unit component changes), training uses the real post-penalty grid from historical results, and inference uses a manually-verified override for the upcoming race once penalties are confirmed. If a driver crashed or was excluded, they're assigned last place.",
   },
   {
     name: "Qualifying Gap to Pole %",
@@ -57,7 +57,12 @@ const FEATURES = [
   {
     name: "Practice Pace Delta",
     weight: "Medium",
-    desc: "Driver's race-representative practice pace vs the session fastest, as a percentage. FP2 long-run stints (5+ consecutive clean laps) are used first — these reflect actual race conditions better than single-lap pace. Falls back to FP3 → FP2 → FP1 best lap when long runs aren't available. On sprint weekends, sprint race fastest laps are used instead.",
+    desc: "Driver's race-representative practice pace vs the session fastest, as a percentage. FP2 long-run stints (5+ consecutive clean laps) are used first — these reflect actual race conditions better than single-lap pace. Falls back to FP3 → FP2 → FP1 best lap when long runs aren't available (e.g. a red-flagged FP2 that no one completes a full stint in). On sprint weekends, sprint race fastest laps are used instead.",
+  },
+  {
+    name: "Practice Pace Is Long-Run",
+    weight: "Low–Med",
+    desc: "Binary flag: 1 when Practice Pace Delta came from a genuine long run, 0 when it fell back to a single best lap. A single lap is a noisier proxy for race pace than a long run — this lets the model weight the two differently instead of treating a disrupted-session fallback the same as real long-run data.",
   },
   {
     name: "Tire Degradation Rate",
@@ -152,7 +157,7 @@ const WEIGHT_COLORS: Record<string, string> = {
 const LIMITATIONS = [
   {
     title: "Limited training data",
-    desc: "The model trains on 2022–2026 race results (~1,500 driver-race rows across 4+ seasons). This is a small dataset for ML — confidence intervals are wide, and the model is most reliable when qualifying position already tells a clear story.",
+    desc: "The model trains on 2023–2026 race results (~1,500 driver-race rows across 4+ seasons). This is a small dataset for ML — confidence intervals are wide, and the model is most reliable when qualifying position already tells a clear story.",
   },
   {
     title: "2026 is an entirely new formula",
@@ -178,6 +183,14 @@ const LIMITATIONS = [
     title: "Qualifying fallback for missing data",
     desc: "If qualifying data isn't available yet (pre-qualifying weekend), the model uses a driver's historical average grid position. If a driver makes Q3 but doesn't set a time (e.g. crashes on an out-lap), the model uses FP3 pace as a proxy instead of a coarse positional estimate. Both fallbacks are less accurate than actual qualifying results.",
   },
+  {
+    title: "Grid penalties need manual verification",
+    desc: "No free API publishes the FIA-adjusted starting grid before lights out — only the raw qualifying classification. When grid penalties are announced (e.g. power unit component changes), the actual starting grid is manually verified against official sources and applied as an override. If a penalty is announced after predictions are generated, the grid position used will be stale until the next regeneration.",
+  },
+  {
+    title: "Disrupted practice sessions reduce data quality",
+    desc: "When a session is red-flagged or interrupted enough that drivers can't complete a full representative long run, practice pace falls back to a single best lap — a materially noisier signal (fuel load, tyre choice, and how hard a team pushes that specific lap all vary). The model is flagged when this happens (see Practice Pace Is Long-Run) so it can weight the fallback appropriately, but a single lap is still less informative than it looks.",
+  },
 ];
 
 export default async function ModelPage() {
@@ -196,7 +209,7 @@ export default async function ModelPage() {
           How It Works
         </h1>
         <p className="font-inter text-sm text-muted leading-relaxed max-w-2xl">
-          Box Box uses a machine learning ensemble trained on F1 race data from 2022 to present.
+          Box Box uses a machine learning ensemble trained on F1 race data from 2023 to present.
           Predictions are regenerated after qualifying each Saturday using the actual grid positions.
         </p>
       </div>
@@ -252,7 +265,7 @@ export default async function ModelPage() {
           <h2 className="font-barlow font-800 text-xl uppercase tracking-wide text-platinum">Feature Engineering</h2>
         </div>
         <p className="font-inter text-xs text-muted mb-4 leading-relaxed">
-          Each row in the training dataset represents one driver in one race. 24 features are computed per driver.
+          Each row in the training dataset represents one driver in one race. 25 features are computed per driver.
           Features with no historical baseline fall back to field averages.
         </p>
         <div className="space-y-1">
@@ -320,13 +333,27 @@ export default async function ModelPage() {
             </div>
           ))}
         </div>
-        <div className="glass-card p-4 flex gap-3">
+        <div className="glass-card p-4 flex gap-3 mb-3">
           <Zap size={14} className="text-muted shrink-0 mt-0.5" />
           <p className="font-inter text-xs text-muted leading-relaxed">
             <span className="text-platinum font-500">Training: </span>
             TimeSeriesSplit cross-validation (4 folds) ensures the model is never trained on future race data — no leakage.
             Season weights: 2026 races are weighted 5× more than 2025, which is weighted 2× more than 2024.
-            Trained on ~1,500 driver-race rows across 2022–2026. Models are retrained as 2026 results accumulate.
+            Trained on ~1,500 driver-race rows across 2023–2026. Models are retrained as 2026 results accumulate.
+          </p>
+        </div>
+        <div className="glass-card p-4 flex gap-3">
+          <Zap size={14} className="text-muted shrink-0 mt-0.5" />
+          <p className="font-inter text-xs text-muted leading-relaxed">
+            <span className="text-platinum font-500">Calibration: </span>
+            Raw classifier output is normalised per race, then temperature-scaled (a fitted exponent that
+            spreads out or sharpens the distribution without changing the ranking) — the temperature is
+            chosen by minimising log-loss against actual winners on held-out CV predictions, not guessed.
+            A second pass blends win/podium probabilities toward historical base rates by grid position,
+            heavily at near-impossible-to-overtake circuits (Monaco, Singapore) and lightly everywhere
+            else — this corrects a real, verified failure mode where the raw model's prediction is
+            completely flat for any grid position beyond roughly P8, regardless of how much worse P8 vs
+            P20 actually is.
           </p>
         </div>
       </section>
@@ -354,7 +381,7 @@ export default async function ModelPage() {
             {
               label: "CV winner accuracy",
               value: winnerAccStr,
-              desc: `Measured via TimeSeriesSplit on ${racesEval} historical races. The model correctly picks the race winner in roughly 1 in 2 races — ~10× better than random.`,
+              desc: `Measured via TimeSeriesSplit on ${racesEval} historical races. The model correctly picks the race winner in roughly 2 in 3 races — ~13× better than random.`,
             },
             {
               label: "CV podium accuracy",
@@ -372,7 +399,7 @@ export default async function ModelPage() {
           ))}
         </div>
         <p className="font-inter text-xs text-muted pl-1">
-          CV figures are from cross-validation on 2023–2025 data. Live 2026 accuracy is tracked on the home page as each race result comes in.
+          CV figures are from cross-validation on 2023–2026 data (2026 races weighted 5× more heavily). Live 2026 accuracy is tracked on the home page as each race result comes in.
         </p>
       </section>
 
