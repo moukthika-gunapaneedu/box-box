@@ -52,6 +52,47 @@ def _sprint_pace_df(year: int, round_num: int) -> pd.DataFrame:
         return pd.DataFrame()
 
 
+def _get_fp_pace_with_provenance(year: int, round_num: int) -> tuple[pd.DataFrame, set]:
+    """
+    Same fallback chain as before (FP2 long runs -> FP3/FP2/FP1 best lap ->
+    sprint), but also returns which driver codes actually came from genuine
+    long-run data vs a single-lap fallback.
+
+    This distinction matters: a single best lap (FP1/FP2/FP3, or the sprint
+    fallback) is a much noisier proxy for race pace than a real long run —
+    fuel load, tire choice, and how hard each team pushed that specific
+    session all vary in ways a long run averages out. Confirmed concretely at
+    the 2026 Belgian GP: FP2 was red-flagged twice, so almost no one completed
+    a qualifying 5+ lap stint, and fp_pace_delta_pct silently fell back to FP3
+    best-lap times for the whole field with no signal anywhere that a
+    different, noisier kind of number was now in that same feature slot. That
+    fallback value ended up being the single biggest factor in a backmarker
+    (P13 grid) outranking a genuine front-row starter (P4) in win probability
+    — bigger than the entire grid gap between them (verified via ablation).
+    fp_pace_is_long_run lets the model learn to weight the two differently
+    instead of treating them as the same signal.
+    """
+    long_run_drivers: set = set()
+    fp_pace = pd.DataFrame()
+    try:
+        fp_pace = get_fp2_long_run_pace(year, round_num)
+        if not fp_pace.empty:
+            long_run_drivers = set(fp_pace["driverCode"])
+    except Exception:
+        pass
+    if fp_pace.empty:
+        for session in ("Practice 3", "Practice 2", "Practice 1"):
+            try:
+                fp_pace = get_fp_pace(year, round_num, session)
+                if not fp_pace.empty:
+                    break
+            except Exception:
+                pass
+    if fp_pace.empty:
+        fp_pace = _sprint_pace_df(year, round_num)
+    return fp_pace, long_run_drivers
+
+
 def _time_str_to_seconds(t: str | None) -> float | None:
     """Parse lap time string '1:40.331' → seconds."""
     if not t or not isinstance(t, str):
@@ -143,21 +184,7 @@ def _build_race_features(
     ]
 
     # FP pace: FP2 long runs (race representative) → FP3 best lap → FP2 best lap → FP1 → sprint
-    fp_pace = pd.DataFrame()
-    try:
-        fp_pace = get_fp2_long_run_pace(year, round_num)
-    except Exception:
-        pass
-    if fp_pace.empty:
-        for session in ("Practice 3", "Practice 2", "Practice 1"):
-            try:
-                fp_pace = get_fp_pace(year, round_num, session)
-                if not fp_pace.empty:
-                    break
-            except Exception:
-                pass
-    if fp_pace.empty:
-        fp_pace = _sprint_pace_df(year, round_num)
+    fp_pace, fp_long_run_drivers = _get_fp_pace_with_provenance(year, round_num)
 
     # Sprint finishing positions (empty DataFrame for non-sprint weekends)
     sprint_results = pd.DataFrame()
@@ -210,6 +237,7 @@ def _build_race_features(
             past_results=past_results,
             quali_df=quali,
             fp_pace_df=fp_pace,
+            fp_long_run_drivers=fp_long_run_drivers,
             standings_df=standings,
             con_standings_df=con_standings,
             weather_dict=weather_dict,
@@ -238,6 +266,7 @@ def _driver_features(
     past_results: pd.DataFrame,
     quali_df: pd.DataFrame,
     fp_pace_df: pd.DataFrame,
+    fp_long_run_drivers: set | None = None,
     standings_df: pd.DataFrame = pd.DataFrame(),
     con_standings_df: pd.DataFrame = pd.DataFrame(),
     weather_dict: dict | None = None,
@@ -463,15 +492,23 @@ def _driver_features(
         feats["teammate_finish_gap"] = 0.0
 
     # ---- FP2 pace delta + tire degradation ----
+    # fp_pace_is_long_run: 1 when fp_pace_delta_pct came from a genuine long
+    # run (race-representative), 0 when it's a single-lap fallback (FP1/FP2/
+    # FP3 best lap, or the sprint proxy) or the team_race_pace_rank-derived
+    # default below. A single lap is a much noisier signal than a long run —
+    # this flag lets the model learn to trust the two differently instead of
+    # treating them as the same feature. See _get_fp_pace_with_provenance.
     if not fp_pace_df.empty and driver_code in fp_pace_df["driverCode"].values:
         fp_row = fp_pace_df[fp_pace_df["driverCode"] == driver_code].iloc[0]
         feats["fp_pace_delta_pct"] = float(fp_row["fp_pace_delta_pct"])
+        feats["fp_pace_is_long_run"] = 1.0 if (fp_long_run_drivers and driver_code in fp_long_run_drivers) else 0.0
         if "fp2_tire_deg_pct" in fp_row.index and pd.notna(fp_row["fp2_tire_deg_pct"]):
             feats["fp2_tire_deg_pct"] = float(fp_row["fp2_tire_deg_pct"])
         else:
             feats["fp2_tire_deg_pct"] = float(fp_pace_df["fp2_tire_deg_pct"].median()) if "fp2_tire_deg_pct" in fp_pace_df.columns else 0.15
     else:
         feats["fp_pace_delta_pct"] = (feats["team_race_pace_rank"] - 1) * 0.15
+        feats["fp_pace_is_long_run"] = 0.0
         feats["fp2_tire_deg_pct"] = 0.15
 
     # ---- Circuit type (looked up from circuit name, never hardcoded) ----
@@ -600,21 +637,7 @@ def build_inference_features(
     except Exception:
         quali = pd.DataFrame()
 
-    fp_pace = pd.DataFrame()
-    try:
-        fp_pace = get_fp2_long_run_pace(year, round_num)
-    except Exception:
-        pass
-    if fp_pace.empty:
-        for session in ("Practice 3", "Practice 2", "Practice 1"):
-            try:
-                fp_pace = get_fp_pace(year, round_num, session)
-                if not fp_pace.empty:
-                    break
-            except Exception:
-                pass
-    if fp_pace.empty:
-        fp_pace = _sprint_pace_df(year, round_num)
+    fp_pace, fp_long_run_drivers = _get_fp_pace_with_provenance(year, round_num)
 
     sprint_results = pd.DataFrame()
     try:
@@ -656,6 +679,7 @@ def build_inference_features(
             past_results=all_past_results,
             quali_df=quali,
             fp_pace_df=fp_pace,
+            fp_long_run_drivers=fp_long_run_drivers,
             standings_df=standings,
             con_standings_df=con_standings,
             weather_dict=weather_dict,
@@ -677,6 +701,7 @@ FEATURE_COLS = [
     "circuit_hist_avg",
     "team_reliability_score",
     "fp_pace_delta_pct",
+    "fp_pace_is_long_run",
     "overtake_difficulty",
     "positions_gained_avg",
     "team_race_pace_rank",
