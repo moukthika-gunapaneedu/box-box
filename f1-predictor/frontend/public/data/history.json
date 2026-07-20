@@ -8,18 +8,62 @@
       "predicted_winner": "RUS",
       "actual_winner": "RUS",
       "correct_win": true,
-      "predicted_podium": ["RUS", "VER", "ANT"],
-      "actual_podium": ["RUS", "ANT", "LEC"],
+      "predicted_podium": [
+        "RUS",
+        "VER",
+        "ANT"
+      ],
+      "actual_podium": [
+        "RUS",
+        "ANT",
+        "LEC"
+      ],
       "podium_hits": 2,
       "predicted_top3": [
-        { "driver_code": "RUS", "driver_name": "George Russell", "team": "Mercedes", "team_color": "#27F4D2", "win_probability": 0.776, "podium_probability": 0.776 },
-        { "driver_code": "VER", "driver_name": "Max Verstappen", "team": "Red Bull Racing", "team_color": "#3671C6", "win_probability": 0.176, "podium_probability": 0.362 },
-        { "driver_code": "ANT", "driver_name": "Kimi Antonelli", "team": "Mercedes", "team_color": "#27F4D2", "win_probability": 0.018, "podium_probability": 0.362 }
+        {
+          "driver_code": "RUS",
+          "driver_name": "George Russell",
+          "team": "Mercedes",
+          "team_color": "#27F4D2",
+          "win_probability": 0.776,
+          "podium_probability": 0.776
+        },
+        {
+          "driver_code": "VER",
+          "driver_name": "Max Verstappen",
+          "team": "Red Bull Racing",
+          "team_color": "#3671C6",
+          "win_probability": 0.176,
+          "podium_probability": 0.362
+        },
+        {
+          "driver_code": "ANT",
+          "driver_name": "Kimi Antonelli",
+          "team": "Mercedes",
+          "team_color": "#27F4D2",
+          "win_probability": 0.018,
+          "podium_probability": 0.362
+        }
       ],
       "actual_top3": [
-        { "driver_code": "RUS", "driver_name": "George Russell", "team": "Mercedes", "team_color": "#27F4D2" },
-        { "driver_code": "ANT", "driver_name": "Kimi Antonelli", "team": "Mercedes", "team_color": "#27F4D2" },
-        { "driver_code": "LEC", "driver_name": "Charles Leclerc", "team": "Ferrari", "team_color": "#E8002D" }
+        {
+          "driver_code": "RUS",
+          "driver_name": "George Russell",
+          "team": "Mercedes",
+          "team_color": "#27F4D2"
+        },
+        {
+          "driver_code": "ANT",
+          "driver_name": "Kimi Antonelli",
+          "team": "Mercedes",
+          "team_color": "#27F4D2"
+        },
+        {
+          "driver_code": "LEC",
+          "driver_name": "Charles Leclerc",
+          "team": "Ferrari",
+          "team_color": "#E8002D"
+        }
       ],
       "updated_at": "2026-03-15T06:51:24.340480+00:00"
     },
@@ -31,18 +75,62 @@
       "predicted_winner": "ANT",
       "actual_winner": "ANT",
       "correct_win": true,
-      "predicted_podium": ["ANT", "RUS", "LEC"],
-      "actual_podium": ["ANT", "RUS", "HAM"],
+      "predicted_podium": [
+        "ANT",
+        "RUS",
+        "LEC"
+      ],
+      "actual_podium": [
+        "ANT",
+        "RUS",
+        "HAM"
+      ],
       "podium_hits": 2,
       "predicted_top3": [
-        { "driver_code": "ANT", "driver_name": "Kimi Antonelli", "team": "Mercedes", "team_color": "#27F4D2", "win_probability": 0.2908, "podium_probability": 0.5678 },
-        { "driver_code": "RUS", "driver_name": "George Russell", "team": "Mercedes", "team_color": "#27F4D2", "win_probability": 0.1213, "podium_probability": 0.5833 },
-        { "driver_code": "LEC", "driver_name": "Charles Leclerc", "team": "Ferrari", "team_color": "#E8002D", "win_probability": 0.0736, "podium_probability": 0.4154 }
+        {
+          "driver_code": "ANT",
+          "driver_name": "Kimi Antonelli",
+          "team": "Mercedes",
+          "team_color": "#27F4D2",
+          "win_probability": 0.2908,
+          "podium_probability": 0.5678
+        },
+        {
+          "driver_code": "RUS",
+          "driver_name": "George Russell",
+          "team": "Mercedes",
+          "team_color": "#27F4D2",
+          "win_probability": 0.1213,
+          "podium_probability": 0.5833
+        },
+        {
+          "driver_code": "LEC",
+          "driver_name": "Charles Leclerc",
+          "team": "Ferrari",
+          "team_color": "#E8002D",
+          "win_probability": 0.0736,
+          "podium_probability": 0.4154
+        }
       ],
       "actual_top3": [
-        { "driver_code": "ANT", "driver_name": "Kimi Antonelli", "team": "Mercedes", "team_color": "#27F4D2" },
-        { "driver_code": "RUS", "driver_name": "George Russell", "team": "Mercedes", "team_color": "#27F4D2" },
-        { "driver_code": "HAM", "driver_name": "Lewis Hamilton", "team": "Ferrari", "team_color": "#E8002D" }
+        {
+          "driver_code": "ANT",
+          "driver_name": "Kimi Antonelli",
+          "team": "Mercedes",
+          "team_color": "#27F4D2"
+        },
+        {
+          "driver_code": "RUS",
+          "driver_name": "George Russell",
+          "team": "Mercedes",
+          "team_color": "#27F4D2"
+        },
+        {
+          "driver_code": "HAM",
+          "driver_name": "Lewis Hamilton",
+          "team": "Ferrari",
+          "team_color": "#E8002D"
+        }
       ],
       "updated_at": "2026-03-15T14:00:00.000000+00:00"
     },
@@ -54,18 +142,62 @@
       "predicted_winner": "ANT",
       "actual_winner": "ANT",
       "correct_win": true,
-      "predicted_podium": ["ANT", "PIA", "RUS"],
-      "actual_podium": ["ANT", "PIA", "LEC"],
+      "predicted_podium": [
+        "ANT",
+        "PIA",
+        "RUS"
+      ],
+      "actual_podium": [
+        "ANT",
+        "PIA",
+        "LEC"
+      ],
       "podium_hits": 2,
       "predicted_top3": [
-        { "driver_code": "ANT", "driver_name": "Kimi Antonelli", "team": "Mercedes", "team_color": "#27F4D2", "win_probability": 0.7368, "podium_probability": 0.9787 },
-        { "driver_code": "PIA", "driver_name": "Oscar Piastri", "team": "McLaren", "team_color": "#FF8000", "win_probability": 0.1962, "podium_probability": 0.0325 },
-        { "driver_code": "RUS", "driver_name": "George Russell", "team": "Mercedes", "team_color": "#27F4D2", "win_probability": 0.0417, "podium_probability": 0.9375 }
+        {
+          "driver_code": "ANT",
+          "driver_name": "Kimi Antonelli",
+          "team": "Mercedes",
+          "team_color": "#27F4D2",
+          "win_probability": 0.7368,
+          "podium_probability": 0.9787
+        },
+        {
+          "driver_code": "PIA",
+          "driver_name": "Oscar Piastri",
+          "team": "McLaren",
+          "team_color": "#FF8000",
+          "win_probability": 0.1962,
+          "podium_probability": 0.0325
+        },
+        {
+          "driver_code": "RUS",
+          "driver_name": "George Russell",
+          "team": "Mercedes",
+          "team_color": "#27F4D2",
+          "win_probability": 0.0417,
+          "podium_probability": 0.9375
+        }
       ],
       "actual_top3": [
-        { "driver_code": "ANT", "driver_name": "Kimi Antonelli", "team": "Mercedes", "team_color": "#27F4D2" },
-        { "driver_code": "PIA", "driver_name": "Oscar Piastri", "team": "McLaren", "team_color": "#FF8000" },
-        { "driver_code": "LEC", "driver_name": "Charles Leclerc", "team": "Ferrari", "team_color": "#E8002D" }
+        {
+          "driver_code": "ANT",
+          "driver_name": "Kimi Antonelli",
+          "team": "Mercedes",
+          "team_color": "#27F4D2"
+        },
+        {
+          "driver_code": "PIA",
+          "driver_name": "Oscar Piastri",
+          "team": "McLaren",
+          "team_color": "#FF8000"
+        },
+        {
+          "driver_code": "LEC",
+          "driver_name": "Charles Leclerc",
+          "team": "Ferrari",
+          "team_color": "#E8002D"
+        }
       ],
       "updated_at": "2026-03-29T18:35:19.506952+00:00"
     },
@@ -77,18 +209,62 @@
       "predicted_winner": "ANT",
       "actual_winner": "ANT",
       "correct_win": true,
-      "predicted_podium": ["ANT", "VER", "NOR"],
-      "actual_podium": ["ANT", "NOR", "PIA"],
+      "predicted_podium": [
+        "ANT",
+        "VER",
+        "NOR"
+      ],
+      "actual_podium": [
+        "ANT",
+        "NOR",
+        "PIA"
+      ],
       "podium_hits": 2,
       "predicted_top3": [
-        { "driver_code": "ANT", "driver_name": "Kimi Antonelli", "team": "Mercedes", "team_color": "#27F4D2", "win_probability": 0.3264, "podium_probability": 0.5702 },
-        { "driver_code": "VER", "driver_name": "Max Verstappen", "team": "Red Bull Racing", "team_color": "#3671C6", "win_probability": 0.1088, "podium_probability": 0.561 },
-        { "driver_code": "NOR", "driver_name": "Lando Norris", "team": "McLaren", "team_color": "#FF8000", "win_probability": 0.0568, "podium_probability": 0.5418 }
+        {
+          "driver_code": "ANT",
+          "driver_name": "Kimi Antonelli",
+          "team": "Mercedes",
+          "team_color": "#27F4D2",
+          "win_probability": 0.3264,
+          "podium_probability": 0.5702
+        },
+        {
+          "driver_code": "VER",
+          "driver_name": "Max Verstappen",
+          "team": "Red Bull Racing",
+          "team_color": "#3671C6",
+          "win_probability": 0.1088,
+          "podium_probability": 0.561
+        },
+        {
+          "driver_code": "NOR",
+          "driver_name": "Lando Norris",
+          "team": "McLaren",
+          "team_color": "#FF8000",
+          "win_probability": 0.0568,
+          "podium_probability": 0.5418
+        }
       ],
       "actual_top3": [
-        { "driver_code": "ANT", "driver_name": "Kimi Antonelli", "team": "Mercedes", "team_color": "#27F4D2" },
-        { "driver_code": "NOR", "driver_name": "Lando Norris", "team": "McLaren", "team_color": "#FF8000" },
-        { "driver_code": "PIA", "driver_name": "Oscar Piastri", "team": "McLaren", "team_color": "#FF8000" }
+        {
+          "driver_code": "ANT",
+          "driver_name": "Kimi Antonelli",
+          "team": "Mercedes",
+          "team_color": "#27F4D2"
+        },
+        {
+          "driver_code": "NOR",
+          "driver_name": "Lando Norris",
+          "team": "McLaren",
+          "team_color": "#FF8000"
+        },
+        {
+          "driver_code": "PIA",
+          "driver_name": "Oscar Piastri",
+          "team": "McLaren",
+          "team_color": "#FF8000"
+        }
       ],
       "updated_at": "2026-05-03T18:30:00.000000+00:00"
     },
@@ -100,18 +276,62 @@
       "predicted_winner": "RUS",
       "actual_winner": "ANT",
       "correct_win": false,
-      "predicted_podium": ["RUS", "ANT", "HAM"],
-      "actual_podium": ["ANT", "HAM", "VER"],
+      "predicted_podium": [
+        "RUS",
+        "ANT",
+        "HAM"
+      ],
+      "actual_podium": [
+        "ANT",
+        "HAM",
+        "VER"
+      ],
       "podium_hits": 2,
       "predicted_top3": [
-        { "driver_code": "RUS", "driver_name": "George Russell", "team": "Mercedes", "team_color": "#27F4D2", "win_probability": 0.2735, "podium_probability": 0.6265 },
-        { "driver_code": "ANT", "driver_name": "Kimi Antonelli", "team": "Mercedes", "team_color": "#27F4D2", "win_probability": 0.2302, "podium_probability": 0.6456 },
-        { "driver_code": "HAM", "driver_name": "Lewis Hamilton", "team": "Ferrari", "team_color": "#E8002D", "win_probability": 0.0908, "podium_probability": 0.3807 }
+        {
+          "driver_code": "RUS",
+          "driver_name": "George Russell",
+          "team": "Mercedes",
+          "team_color": "#27F4D2",
+          "win_probability": 0.2735,
+          "podium_probability": 0.6265
+        },
+        {
+          "driver_code": "ANT",
+          "driver_name": "Kimi Antonelli",
+          "team": "Mercedes",
+          "team_color": "#27F4D2",
+          "win_probability": 0.2302,
+          "podium_probability": 0.6456
+        },
+        {
+          "driver_code": "HAM",
+          "driver_name": "Lewis Hamilton",
+          "team": "Ferrari",
+          "team_color": "#E8002D",
+          "win_probability": 0.0908,
+          "podium_probability": 0.3807
+        }
       ],
       "actual_top3": [
-        { "driver_code": "ANT", "driver_name": "Kimi Antonelli", "team": "Mercedes", "team_color": "#27F4D2" },
-        { "driver_code": "HAM", "driver_name": "Lewis Hamilton", "team": "Ferrari", "team_color": "#E8002D" },
-        { "driver_code": "VER", "driver_name": "Max Verstappen", "team": "Red Bull Racing", "team_color": "#3671C6" }
+        {
+          "driver_code": "ANT",
+          "driver_name": "Kimi Antonelli",
+          "team": "Mercedes",
+          "team_color": "#27F4D2"
+        },
+        {
+          "driver_code": "HAM",
+          "driver_name": "Lewis Hamilton",
+          "team": "Ferrari",
+          "team_color": "#E8002D"
+        },
+        {
+          "driver_code": "VER",
+          "driver_name": "Max Verstappen",
+          "team": "Red Bull Racing",
+          "team_color": "#3671C6"
+        }
       ],
       "updated_at": "2026-05-24T20:30:00.000000+00:00"
     },
@@ -123,18 +343,62 @@
       "predicted_winner": "ANT",
       "actual_winner": "ANT",
       "correct_win": true,
-      "predicted_podium": ["ANT", "VER", "HAM"],
-      "actual_podium": ["ANT", "HAM", "GAS"],
+      "predicted_podium": [
+        "ANT",
+        "VER",
+        "HAM"
+      ],
+      "actual_podium": [
+        "ANT",
+        "HAM",
+        "GAS"
+      ],
       "podium_hits": 2,
       "predicted_top3": [
-        { "driver_code": "ANT", "driver_name": "Kimi Antonelli", "team": "Mercedes", "team_color": "#27F4D2", "win_probability": 0.3850, "podium_probability": 0.6378 },
-        { "driver_code": "VER", "driver_name": "Max Verstappen", "team": "Red Bull Racing", "team_color": "#3671C6", "win_probability": 0.2264, "podium_probability": 0.7713 },
-        { "driver_code": "HAM", "driver_name": "Lewis Hamilton", "team": "Ferrari", "team_color": "#E8002D", "win_probability": 0.1755, "podium_probability": 0.7579 }
+        {
+          "driver_code": "ANT",
+          "driver_name": "Kimi Antonelli",
+          "team": "Mercedes",
+          "team_color": "#27F4D2",
+          "win_probability": 0.385,
+          "podium_probability": 0.6378
+        },
+        {
+          "driver_code": "VER",
+          "driver_name": "Max Verstappen",
+          "team": "Red Bull Racing",
+          "team_color": "#3671C6",
+          "win_probability": 0.2264,
+          "podium_probability": 0.7713
+        },
+        {
+          "driver_code": "HAM",
+          "driver_name": "Lewis Hamilton",
+          "team": "Ferrari",
+          "team_color": "#E8002D",
+          "win_probability": 0.1755,
+          "podium_probability": 0.7579
+        }
       ],
       "actual_top3": [
-        { "driver_code": "ANT", "driver_name": "Kimi Antonelli", "team": "Mercedes", "team_color": "#27F4D2" },
-        { "driver_code": "HAM", "driver_name": "Lewis Hamilton", "team": "Ferrari", "team_color": "#E8002D" },
-        { "driver_code": "GAS", "driver_name": "Pierre Gasly", "team": "Alpine", "team_color": "#FF87BC" }
+        {
+          "driver_code": "ANT",
+          "driver_name": "Kimi Antonelli",
+          "team": "Mercedes",
+          "team_color": "#27F4D2"
+        },
+        {
+          "driver_code": "HAM",
+          "driver_name": "Lewis Hamilton",
+          "team": "Ferrari",
+          "team_color": "#E8002D"
+        },
+        {
+          "driver_code": "GAS",
+          "driver_name": "Pierre Gasly",
+          "team": "Alpine",
+          "team_color": "#FF87BC"
+        }
       ],
       "updated_at": "2026-06-07T17:00:00.000000+00:00"
     },
@@ -146,22 +410,65 @@
       "predicted_winner": "HAM",
       "actual_winner": "HAM",
       "correct_win": true,
-      "predicted_podium": ["HAM", "RUS", "ANT"],
-      "actual_podium": ["HAM", "RUS", "NOR"],
+      "predicted_podium": [
+        "HAM",
+        "RUS",
+        "ANT"
+      ],
+      "actual_podium": [
+        "HAM",
+        "RUS",
+        "NOR"
+      ],
       "podium_hits": 2,
       "predicted_top3": [
-        { "driver_code": "HAM", "driver_name": "Lewis Hamilton", "team": "Ferrari", "team_color": "#E8002D", "win_probability": 0.2642, "podium_probability": 0.3932 },
-        { "driver_code": "RUS", "driver_name": "George Russell", "team": "Mercedes", "team_color": "#27F4D2", "win_probability": 0.2447, "podium_probability": 0.2492 },
-        { "driver_code": "ANT", "driver_name": "Kimi Antonelli", "team": "Mercedes", "team_color": "#27F4D2", "win_probability": 0.1564, "podium_probability": 0.3822 }
+        {
+          "driver_code": "HAM",
+          "driver_name": "Lewis Hamilton",
+          "team": "Ferrari",
+          "team_color": "#E8002D",
+          "win_probability": 0.2642,
+          "podium_probability": 0.3932
+        },
+        {
+          "driver_code": "RUS",
+          "driver_name": "George Russell",
+          "team": "Mercedes",
+          "team_color": "#27F4D2",
+          "win_probability": 0.2447,
+          "podium_probability": 0.2492
+        },
+        {
+          "driver_code": "ANT",
+          "driver_name": "Kimi Antonelli",
+          "team": "Mercedes",
+          "team_color": "#27F4D2",
+          "win_probability": 0.1564,
+          "podium_probability": 0.3822
+        }
       ],
       "actual_top3": [
-        { "driver_code": "HAM", "driver_name": "Lewis Hamilton", "team": "Ferrari", "team_color": "#E8002D" },
-        { "driver_code": "RUS", "driver_name": "George Russell", "team": "Mercedes", "team_color": "#27F4D2" },
-        { "driver_code": "NOR", "driver_name": "Lando Norris", "team": "McLaren", "team_color": "#FF8000" }
+        {
+          "driver_code": "HAM",
+          "driver_name": "Lewis Hamilton",
+          "team": "Ferrari",
+          "team_color": "#E8002D"
+        },
+        {
+          "driver_code": "RUS",
+          "driver_name": "George Russell",
+          "team": "Mercedes",
+          "team_color": "#27F4D2"
+        },
+        {
+          "driver_code": "NOR",
+          "driver_name": "Lando Norris",
+          "team": "McLaren",
+          "team_color": "#FF8000"
+        }
       ],
       "updated_at": "2026-06-14T15:00:00.000000+00:00"
-    }
-    ,
+    },
     {
       "round": 8,
       "race": "Austrian Grand Prix",
@@ -170,18 +477,62 @@
       "predicted_winner": "RUS",
       "actual_winner": "RUS",
       "correct_win": true,
-      "predicted_podium": ["RUS", "LEC", "ANT"],
-      "actual_podium": ["RUS", "VER", "ANT"],
+      "predicted_podium": [
+        "RUS",
+        "LEC",
+        "ANT"
+      ],
+      "actual_podium": [
+        "RUS",
+        "VER",
+        "ANT"
+      ],
       "podium_hits": 2,
       "predicted_top3": [
-        { "driver_code": "RUS", "driver_name": "George Russell", "team": "Mercedes", "team_color": "#27F4D2", "win_probability": 0.1436, "podium_probability": 0.4654 },
-        { "driver_code": "LEC", "driver_name": "Charles Leclerc", "team": "Ferrari", "team_color": "#E8002D", "win_probability": 0.1374, "podium_probability": 0.4695 },
-        { "driver_code": "ANT", "driver_name": "Kimi Antonelli", "team": "Mercedes", "team_color": "#27F4D2", "win_probability": 0.1217, "podium_probability": 0.4295 }
+        {
+          "driver_code": "RUS",
+          "driver_name": "George Russell",
+          "team": "Mercedes",
+          "team_color": "#27F4D2",
+          "win_probability": 0.1436,
+          "podium_probability": 0.4654
+        },
+        {
+          "driver_code": "LEC",
+          "driver_name": "Charles Leclerc",
+          "team": "Ferrari",
+          "team_color": "#E8002D",
+          "win_probability": 0.1374,
+          "podium_probability": 0.4695
+        },
+        {
+          "driver_code": "ANT",
+          "driver_name": "Kimi Antonelli",
+          "team": "Mercedes",
+          "team_color": "#27F4D2",
+          "win_probability": 0.1217,
+          "podium_probability": 0.4295
+        }
       ],
       "actual_top3": [
-        { "driver_code": "RUS", "driver_name": "George Russell", "team": "Mercedes", "team_color": "#27F4D2" },
-        { "driver_code": "VER", "driver_name": "Max Verstappen", "team": "Red Bull Racing", "team_color": "#3671C6" },
-        { "driver_code": "ANT", "driver_name": "Kimi Antonelli", "team": "Mercedes", "team_color": "#27F4D2" }
+        {
+          "driver_code": "RUS",
+          "driver_name": "George Russell",
+          "team": "Mercedes",
+          "team_color": "#27F4D2"
+        },
+        {
+          "driver_code": "VER",
+          "driver_name": "Max Verstappen",
+          "team": "Red Bull Racing",
+          "team_color": "#3671C6"
+        },
+        {
+          "driver_code": "ANT",
+          "driver_name": "Kimi Antonelli",
+          "team": "Mercedes",
+          "team_color": "#27F4D2"
+        }
       ],
       "updated_at": "2026-06-29T06:00:00.000000+00:00"
     },
@@ -193,22 +544,133 @@
       "predicted_winner": "ANT",
       "actual_winner": "LEC",
       "correct_win": false,
-      "predicted_podium": ["ANT", "RUS", "HAM"],
-      "actual_podium": ["LEC", "RUS", "HAM"],
+      "predicted_podium": [
+        "ANT",
+        "RUS",
+        "HAM"
+      ],
+      "actual_podium": [
+        "LEC",
+        "RUS",
+        "HAM"
+      ],
       "podium_hits": 2,
       "predicted_top3": [
-        { "driver_code": "ANT", "driver_name": "Kimi Antonelli", "team": "Mercedes", "team_color": "#27F4D2", "win_probability": 0.3135, "podium_probability": 0.7634 },
-        { "driver_code": "RUS", "driver_name": "George Russell", "team": "Mercedes", "team_color": "#27F4D2", "win_probability": 0.195, "podium_probability": 0.6628 },
-        { "driver_code": "HAM", "driver_name": "Lewis Hamilton", "team": "Ferrari", "team_color": "#E8002D", "win_probability": 0.1002, "podium_probability": 0.3074 }
+        {
+          "driver_code": "ANT",
+          "driver_name": "Kimi Antonelli",
+          "team": "Mercedes",
+          "team_color": "#27F4D2",
+          "win_probability": 0.3135,
+          "podium_probability": 0.7634
+        },
+        {
+          "driver_code": "RUS",
+          "driver_name": "George Russell",
+          "team": "Mercedes",
+          "team_color": "#27F4D2",
+          "win_probability": 0.195,
+          "podium_probability": 0.6628
+        },
+        {
+          "driver_code": "HAM",
+          "driver_name": "Lewis Hamilton",
+          "team": "Ferrari",
+          "team_color": "#E8002D",
+          "win_probability": 0.1002,
+          "podium_probability": 0.3074
+        }
       ],
       "actual_top3": [
-        { "driver_code": "LEC", "driver_name": "Charles Leclerc", "team": "Ferrari", "team_color": "#E8002D" },
-        { "driver_code": "RUS", "driver_name": "George Russell", "team": "Mercedes", "team_color": "#27F4D2" },
-        { "driver_code": "HAM", "driver_name": "Lewis Hamilton", "team": "Ferrari", "team_color": "#E8002D" }
+        {
+          "driver_code": "LEC",
+          "driver_name": "Charles Leclerc",
+          "team": "Ferrari",
+          "team_color": "#E8002D"
+        },
+        {
+          "driver_code": "RUS",
+          "driver_name": "George Russell",
+          "team": "Mercedes",
+          "team_color": "#27F4D2"
+        },
+        {
+          "driver_code": "HAM",
+          "driver_name": "Lewis Hamilton",
+          "team": "Ferrari",
+          "team_color": "#E8002D"
+        }
       ],
       "updated_at": "2026-07-06T00:00:00.000000+00:00"
+    },
+    {
+      "round": 10,
+      "race": "Belgian Grand Prix",
+      "circuit": "Circuit de Spa-Francorchamps",
+      "race_date": "2026-07-19",
+      "predicted_winner": "ANT",
+      "actual_winner": "ANT",
+      "correct_win": true,
+      "predicted_podium": [
+        "ANT",
+        "VER",
+        "RUS"
+      ],
+      "actual_podium": [
+        "ANT",
+        "LEC",
+        "VER"
+      ],
+      "podium_hits": 2,
+      "predicted_top3": [
+        {
+          "driver_code": "ANT",
+          "driver_name": "Kimi Antonelli",
+          "team": "Mercedes",
+          "team_color": "#27F4D2",
+          "win_probability": 0.8642,
+          "podium_probability": 0.8642
+        },
+        {
+          "driver_code": "VER",
+          "driver_name": "Max Verstappen",
+          "team": "Red Bull Racing",
+          "team_color": "#3671C6",
+          "win_probability": 0.025,
+          "podium_probability": 0.3814
+        },
+        {
+          "driver_code": "RUS",
+          "driver_name": "George Russell",
+          "team": "Mercedes",
+          "team_color": "#27F4D2",
+          "win_probability": 0.017,
+          "podium_probability": 0.3627
+        }
+      ],
+      "actual_top3": [
+        {
+          "driver_code": "ANT",
+          "driver_name": "Kimi Antonelli",
+          "team": "Mercedes",
+          "team_color": "#27F4D2"
+        },
+        {
+          "driver_code": "LEC",
+          "driver_name": "Charles Leclerc",
+          "team": "Ferrari",
+          "team_color": "#E8002D"
+        },
+        {
+          "driver_code": "VER",
+          "driver_name": "Max Verstappen",
+          "team": "Red Bull Racing",
+          "team_color": "#3671C6"
+        }
+      ],
+      "updated_at": "2026-07-20T13:25:54.569463+00:00"
     }
   ],
-  "season_winner_accuracy": 0.778,
+  "season_winner_accuracy": 0.8,
   "season_podium_accuracy": 0.667
 }
