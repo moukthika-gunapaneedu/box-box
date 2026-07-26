@@ -669,8 +669,75 @@
         }
       ],
       "updated_at": "2026-07-20T13:25:54.569463+00:00"
+    },
+    {
+      "round": 11,
+      "race": "Hungarian Grand Prix",
+      "circuit": "Hungaroring",
+      "race_date": "2026-07-26",
+      "predicted_winner": "NOR",
+      "actual_winner": "NOR",
+      "correct_win": true,
+      "predicted_podium": [
+        "NOR",
+        "HAM",
+        "LEC"
+      ],
+      "actual_podium": [
+        "NOR",
+        "VER",
+        "ANT"
+      ],
+      "podium_hits": 1,
+      "predicted_top3": [
+        {
+          "driver_code": "NOR",
+          "driver_name": "Lando Norris",
+          "team": "McLaren",
+          "team_color": "#FF8000",
+          "win_probability": 0.4263,
+          "podium_probability": 0.5556
+        },
+        {
+          "driver_code": "HAM",
+          "driver_name": "Lewis Hamilton",
+          "team": "Ferrari",
+          "team_color": "#E8002D",
+          "win_probability": 0.3558,
+          "podium_probability": 0.4324
+        },
+        {
+          "driver_code": "LEC",
+          "driver_name": "Charles Leclerc",
+          "team": "Ferrari",
+          "team_color": "#E8002D",
+          "win_probability": 0.1076,
+          "podium_probability": 0.5438
+        }
+      ],
+      "actual_top3": [
+        {
+          "driver_code": "NOR",
+          "driver_name": "Lando Norris",
+          "team": "McLaren",
+          "team_color": "#FF8000"
+        },
+        {
+          "driver_code": "VER",
+          "driver_name": "Max Verstappen",
+          "team": "Red Bull Racing",
+          "team_color": "#3671C6"
+        },
+        {
+          "driver_code": "ANT",
+          "driver_name": "Kimi Antonelli",
+          "team": "Mercedes",
+          "team_color": "#27F4D2"
+        }
+      ],
+      "updated_at": "2026-07-26T16:11:51.948906+00:00"
     }
   ],
-  "season_winner_accuracy": 0.8,
-  "season_podium_accuracy": 0.667
+  "season_winner_accuracy": 0.818,
+  "season_podium_accuracy": 0.636
 }
