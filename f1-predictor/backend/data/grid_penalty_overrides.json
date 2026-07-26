@@ -4,6 +4,11 @@
       "ANT": 1, "VER": 2, "RUS": 3, "LEC": 4, "HAM": 5, "PIA": 6, "LIN": 7,
       "BOR": 8, "LAW": 9, "GAS": 10, "COL": 11, "HUL": 12, "NOR": 13, "SAI": 14,
       "BEA": 15, "ALB": 16, "OCO": 17, "BOT": 18, "PER": 19, "STR": 20, "HAD": 21, "ALO": 22
+    },
+    "11": {
+      "NOR": 1, "LEC": 2, "PIA": 3, "VER": 4, "HAM": 5, "RUS": 6, "ANT": 7,
+      "HAD": 8, "LIN": 9, "HUL": 10, "LAW": 11, "GAS": 12, "COL": 13, "BOR": 14,
+      "OCO": 15, "ALO": 16, "BEA": 17, "SAI": 18, "ALB": 19, "STR": 20, "BOT": 21, "PER": 22
     }
   }
 }

@@ -147,46 +147,44 @@ def predict(round_num: int | None = None) -> dict:
         win_probs, pod_probs, pos_preds = _heuristic_predictions(features_df)
         model_source = "heuristic"
 
-    # Normalize win probabilities to sum to 1, then apply temperature scaling
-    # to prevent one driver dominating with 80-90%+ (uncalibrated model artefact).
-    # T=3 was an unvalidated guess. Replaced 2026-07-18 after: (1) log-loss vs
-    # actual winners on the 63-race CV holdout is minimized at T~1.3 (log-loss
-    # 1.334 vs 1.776 at T=3) and stays minimized under season-recency
-    # reweighting; (2) a 200-resample bootstrap of that fit gives a stable
-    # estimate (median 1.30, std 0.14, 90% CI [1.10, 1.50]) that NEVER supports
-    # T>=2.5 in any resample; (3) an isotonic-regression cross-check (a more
-    # flexible, non-parametric calibration) agrees directionally and achieves
-    # even better log-loss (1.165); (4) the reliability diagram at T=1.3 is
-    # well-calibrated through most of the range, with mild overconfidence only
-    # in the top bucket (76.7% predicted vs 66.7% empirical, n=12 — small, but
-    # the only real caution flag found). T=1.5 sits deliberately above the
-    # fitted optimum (1.3) as a conservative margin for that caution, while
-    # still being solidly evidence-based rather than guessed. Note T can never
-    # affect winner_accuracy/podium_accuracy either way — raising probabilities
-    # to a power is order-preserving — so those ranking metrics can't validate
-    # this value; the reliability diagram is what does. Isotonic regression
-    # would calibrate magnitude even better but reintroduces the same flat-tail
-    # ranking problem the grid-position blend below already fixes (it's also
-    # monotonic in the raw score, with no notion of grid position) — combining
-    # the two properly is a real follow-up, not a same-night change.
-    WIN_TEMP = 1.5
+    # Normalize win probabilities to sum to 1, then recalibrate magnitude.
+    # History: T=3 (guessed) -> T=1.5 power-scaling (fitted 2026-07-18 via
+    # log-loss on the 63-race CV holdout). That fit also cross-checked isotonic
+    # regression and noted it "would calibrate magnitude even better but
+    # reintroduces the same flat-tail ranking problem" -- flagged as a real
+    # follow-up, not resolved. Investigated 2026-07-26: isotonic on properly
+    # per-race-normalized scores DOES beat power-scaling on log-loss (0.094 vs
+    # 0.109 on 64-race held-out CV) but collapses ~1300 rows to ~12 distinct
+    # calibrated values -- close non-favorites get tied and P3 exact-slot
+    # accuracy drops from 12.7% to 4.8% because ties get broken arbitrarily.
+    # Platt (logistic) scaling on the same per-race-normalized input is smooth
+    # and strictly monotonic (a=0.850>0, b=-0.200; fit via LogisticRegression
+    # on logit(win_prob_normalized) -> actual win, same 64-race CV), so it is
+    # provably rank-preserving within a race -- confirmed empirically: P1/P2/P3
+    # exact-slot accuracy identical to the old power-scaling, log-loss improves
+    # ~4% (0.109 -> 0.105). This is the "properly combining" calibration the
+    # 07-18 note deferred -- ships now with the accuracy-invariance verified,
+    # not assumed.
+    WIN_PLATT_A, WIN_PLATT_B = 0.8499, -0.2001
     win_probs = np.array(win_probs, dtype=float)
     win_probs = np.clip(win_probs, 1e-9, 1)
     win_probs = win_probs / win_probs.sum()
-    win_probs = win_probs ** (1.0 / WIN_TEMP)
+    win_logit = np.log(win_probs / (1 - win_probs))
+    win_probs = 1.0 / (1.0 + np.exp(-(WIN_PLATT_A * win_logit + WIN_PLATT_B)))
     win_probs = win_probs / win_probs.sum()
 
     # Normalize podium probabilities: exactly 3 podium spots exist, so the sum
     # of all drivers' podium probabilities must equal 3.0. Without this, the
     # uncalibrated LGB model hands out inflated probabilities to everyone.
-    # T fit the same way as WIN_TEMP; the original guess of 2.0 was already
-    # close to the fitted optimum (~1.8, log-loss 0.2147 vs 0.2155 at 2.0) —
-    # much smaller miscalibration than the win model had.
-    POD_TEMP = 1.8
+    # Platt-fit the same way as WIN above (a=0.672, b=1.191); the old T=1.8
+    # power-scaling was already close to well-calibrated for podium, so this
+    # is a smaller correction than the win-probability one.
+    POD_PLATT_A, POD_PLATT_B = 0.6719, 1.1911
     pod_probs = np.array(pod_probs, dtype=float)
     pod_probs = np.clip(pod_probs, 1e-9, 1)
     pod_probs = pod_probs / pod_probs.sum()
-    pod_probs = pod_probs ** (1.0 / POD_TEMP)
+    pod_logit = np.log(pod_probs / (1 - pod_probs))
+    pod_probs = 1.0 / (1.0 + np.exp(-(POD_PLATT_A * pod_logit + POD_PLATT_B)))
     pod_probs = pod_probs / pod_probs.sum() * 3.0
     pod_probs = np.clip(pod_probs, 0, 1)
 

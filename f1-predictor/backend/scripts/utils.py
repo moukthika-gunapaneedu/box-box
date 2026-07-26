@@ -118,6 +118,8 @@ OVERTAKE_INDEX: dict[str, float] = {
 CIRCUIT_OVERTAKE_OVERRIDES: dict[str, float] = {
     "monaco": 0.05,       # virtually impossible to overtake
     "marina bay": 0.10,   # Singapore — tight, but some passes under SC/VSC
+    "hungaroring": 0.25,  # "Monaco without walls" — hard, but ground-effect regs + Turn 1 DRS zone
+                          # still produce double-digit overtakes/race (65 in 2024), unlike true Monaco
 }
 
 

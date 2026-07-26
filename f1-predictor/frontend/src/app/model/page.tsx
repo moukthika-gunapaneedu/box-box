@@ -157,7 +157,7 @@ const WEIGHT_COLORS: Record<string, string> = {
 const LIMITATIONS = [
   {
     title: "Limited training data",
-    desc: "The model trains on 2023–2026 race results (~1,500 driver-race rows across 4+ seasons). This is a small dataset for ML — confidence intervals are wide, and the model is most reliable when qualifying position already tells a clear story.",
+    desc: "The model trains on 2023–2026 race results (~1,600 driver-race rows across 4+ seasons). This is a small dataset for ML — confidence intervals are wide, and the model is most reliable when qualifying position already tells a clear story.",
   },
   {
     title: "2026 is an entirely new formula",
@@ -339,18 +339,21 @@ export default async function ModelPage() {
             <span className="text-platinum font-500">Training: </span>
             TimeSeriesSplit cross-validation (4 folds) ensures the model is never trained on future race data — no leakage.
             Season weights: 2026 races are weighted 5× more than 2025, which is weighted 2× more than 2024.
-            Trained on ~1,500 driver-race rows across 2023–2026. Models are retrained as 2026 results accumulate.
+            Trained on ~1,600 driver-race rows across 2023–2026. Models are retrained as 2026 results accumulate.
           </p>
         </div>
         <div className="glass-card p-4 flex gap-3">
           <Zap size={14} className="text-muted shrink-0 mt-0.5" />
           <p className="font-inter text-xs text-muted leading-relaxed">
             <span className="text-platinum font-500">Calibration: </span>
-            Raw classifier output is normalised per race, then temperature-scaled (a fitted exponent that
-            spreads out or sharpens the distribution without changing the ranking) — the temperature is
-            chosen by minimising log-loss against actual winners on held-out CV predictions, not guessed.
-            A second pass blends win/podium probabilities toward historical base rates by grid position,
-            heavily at near-impossible-to-overtake circuits (Monaco, Singapore) and lightly everywhere
+            Raw classifier output is normalised per race, then recalibrated with a fitted logistic (Platt)
+            curve — a smooth, strictly rank-preserving transform, so it can never change who's picked to
+            win — chosen by minimising log-loss against actual winners on held-out CV predictions, not
+            guessed. An isotonic-regression alternative was tested and rejected: it produced a better
+            log-loss but collapsed hundreds of close, non-favourite drivers into a handful of tied
+            probability buckets, which silently corrupted the ranking among them. A second pass blends
+            win/podium probabilities toward historical base rates by grid position, heavily at
+            near-impossible-to-overtake circuits (Monaco, Singapore, Hungaroring) and lightly everywhere
             else — this corrects a real, verified failure mode where the raw model's prediction is
             completely flat for any grid position beyond roughly P8, regardless of how much worse P8 vs
             P20 actually is.

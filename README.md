@@ -53,6 +53,7 @@ box-box/
     │   │   └── metrics.json           # CV accuracy metrics
     │   ├── data/
     │   │   ├── cache/                 # MD5-keyed API response cache (configurable TTL)
+    │   │   ├── grid_penalty_overrides.json  # Manually-maintained post-penalty grid positions (no API publishes these pre-race)
     │   │   └── training_features.parquet
     │   └── requirements.txt
     └── frontend/
@@ -76,8 +77,8 @@ box-box/
 ### Prediction Pipeline
 
 1. **Data collection**: `collect_data.py` fetches qualifying results, standings, and weather from Jolpica and OpenF1. FP2 long-run race pace is extracted via FastF1 (primary — clean stint IDs and proper pit-stop detection) with OpenF1 raw laps as fallback. Responses are cached with MD5-keyed files and configurable TTL. Failed requests retry up to 3 times with exponential backoff.
-2. **Feature engineering**: `feature_engineer.py` builds a 24-feature matrix per driver per race. Temporal guards prevent future data from leaking into training windows.
-3. **Inference**: `predict_race.py` loads the trained models, runs all three, and calibrates output probabilities using temperature scaling (3.0 for wins, 2.0 for podiums). Win probabilities are normalized to sum to 1.0; podium probabilities are normalized to sum to 3.0. If models aren't available, a fallback heuristic scores drivers using qualifying position, recent form, and team pace.
+2. **Feature engineering**: `feature_engineer.py` builds a 25-feature matrix per driver per race. Temporal guards prevent future data from leaking into training windows.
+3. **Inference**: `predict_race.py` loads the trained models, runs all three, and calibrates output probabilities using a fitted logistic (Platt) recalibration — a smooth, strictly rank-preserving transform fit by minimizing log-loss against actual winners on held-out CV predictions. Win probabilities are normalized to sum to 1.0; podium probabilities are normalized to sum to 3.0. A grid-position blend then corrects for the raw model going flat past ~P8 (heavier at near-impossible-to-overtake circuits like Monaco/Singapore/Hungaroring, lighter elsewhere). If models aren't available, a fallback heuristic scores drivers using qualifying position, recent form, and team pace.
 4. **Output**: predictions are written to `frontend/public/data/predictions.json` and picked up by the static Next.js build.
 5. **Post-race**: `update_history.py` records actual results, compares against predictions, and updates `history.json`. After every 4 completed races, the models retrain on the expanded dataset.
 
@@ -111,18 +112,19 @@ Each driver-race row is built from:
 | `sprint_position` | Sprint race finishing position (NaN on non-sprint weekends) |
 | `sprint_quali_delta` | Sprint position minus qualifying position (negative = gained positions) |
 | `sprint_pace_delta_pct` | Sprint best lap vs session fastest, as % |
+| `fp_pace_is_long_run` | Flags whether `fp_pace_delta_pct` came from a genuine long run (1) or a single-lap fallback (0) — a long run is a materially cleaner signal |
 
 ### Model Details
 
-All three models share similar hyperparameters: 300 estimators, learning rate 0.05, max depth 4–5. Training uses median imputation for missing values and sample weights that give 2026 race results 5× the weight of 2025 data to reflect the new regulations. Cross-validation uses 4-fold `TimeSeriesSplit` grouped by (season, round) to prevent temporal leakage.
+All three models share similar hyperparameters: 300 estimators, learning rate 0.05, max depth 4–5. Training uses median imputation for missing values and sample weights that give 2026 race results 5× the weight of 2025 data to reflect the new regulations. Cross-validation uses 4-fold `TimeSeriesSplit` grouped by (season, round) to prevent temporal leakage. The position regressor is trained with a MAE-native loss (`reg:absoluteerror`), not squared error — squared error was found to tie the trivial "finish == grid position" baseline exactly.
 
 | Model | Algorithm | Target | CV Accuracy |
 |---|---|---|---|
-| Win classifier | XGBoost | Race winner | 62.9% |
-| Podium classifier | LightGBM | Top-3 finish | 61.3% |
-| Position regressor | XGBoost | Final position | — |
+| Win classifier | XGBoost | Race winner | 68.8% |
+| Podium classifier | LightGBM | Top-3 finish | 68.2% |
+| Position regressor | XGBoost | Final position | MAE 3.17 (vs 3.32 grid-only baseline) |
 
-Evaluated across 62 races (2023–2026 historical + 2026 season-to-date) using 4-fold TimeSeriesSplit.
+Evaluated across 64 races (2023–2026 historical + 2026 season-to-date) using 4-fold TimeSeriesSplit.
 
 ---
 
