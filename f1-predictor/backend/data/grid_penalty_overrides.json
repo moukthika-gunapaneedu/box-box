@@ -13,7 +13,7 @@
     "13": {
       "GAS": 1, "RUS": 2, "LEC": 3, "HAM": 4, "VER": 5, "PIA": 6, "COL": 7,
       "NOR": 8, "LIN": 9, "BOR": 10, "BEA": 11, "HUL": 12, "SAI": 13, "OCO": 14,
-      "TSU": 15, "BOT": 16, "PER": 17, "ALO": 18, "STR": 19, "ANT": 20, "LAW": 21, "ALB": 22
+      "TSU": 15, "BOT": 16, "PER": 17, "STR": 18, "ANT": 19, "ALB": 20, "ALO": 21, "LAW": 22
     }
   }
 }
