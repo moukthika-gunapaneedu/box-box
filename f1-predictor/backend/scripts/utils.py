@@ -94,6 +94,7 @@ CIRCUIT_TYPE_MAP: dict[str, str] = {
     "las vegas": "street",
     "lusail": "high_speed",
     "yas marina": "technical",
+    "madring": "street_hybrid",  # inaugural 2026 race, no overtaking data yet — best guess
 }
 
 def get_circuit_type(circuit_name: str) -> str:
