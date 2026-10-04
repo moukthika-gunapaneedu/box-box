@@ -19,6 +19,16 @@
       "NOR": 1, "ANT": 2, "VER": 3, "HAM": 4, "LEC": 5, "RUS": 6, "PIA": 7,
       "LAW": 8, "COL": 9, "LIN": 10, "HUL": 11, "BOR": 12, "OCO": 13, "GAS": 14,
       "TSU": 15, "ALB": 16, "ALO": 17, "PER": 18, "BOT": 19, "SAI": 20, "STR": 21, "BEA": 22
+    },
+    "15": {
+      "RUS": 1, "LEC": 2, "PIA": 3, "HAD": 4, "NOR": 5, "HAM": 6, "GAS": 7,
+      "VER": 8, "COL": 9, "BEA": 10, "LAW": 11, "ALB": 12, "OCO": 13, "SAI": 14,
+      "LIN": 15, "ANT": 16, "BOR": 17, "HUL": 18, "BOT": 19, "PER": 20, "ALO": 21, "STR": 22
+    },
+    "16": {
+      "VER": 1, "HAM": 2, "ANT": 3, "LEC": 4, "NOR": 5, "PIA": 6, "RUS": 7,
+      "HAD": 8, "GAS": 9, "BOR": 10, "LAW": 11, "ALO": 12, "SAI": 13, "STR": 14,
+      "HUL": 15, "BEA": 16, "OCO": 17, "ALB": 18, "BOT": 19, "PER": 20, "COL": 21, "LIN": 22
     }
   }
 }
